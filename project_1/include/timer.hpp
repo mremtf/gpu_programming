@@ -1,6 +1,9 @@
+#ifndef _TIMER_HPP__
+#define _TIMER_HPP__
+
 #include <chrono>
 
-using std::chrono::high_resolution_clock;  // steady_clock?
+using namespace std::chrono::high_resolution_clock;  // steady_clock?
 
 class simple_timer {
   private:
@@ -17,3 +20,5 @@ class simple_timer {
     	return elapsed<std::chrono::milliseconds>();
     }
 };
+
+#endif
