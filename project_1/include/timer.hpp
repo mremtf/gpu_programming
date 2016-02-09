@@ -3,21 +3,22 @@
 
 #include <chrono>
 
-using namespace std::chrono::high_resolution_clock;  // steady_clock?
+using namespace std::chrono;
+using hrc = high_resolution_clock;
 
 class simple_timer {
   private:
-    time_point a, b;
+    hrc::time_point a, b;
 
   public:
-    void begin() { a = now(); }
-    void end() { b = now(); }
+    void begin() { a = hrc::now(); }
+    void end() { b = hrc::now(); }
     template <typename time_unit>
     double elapsed() {
-        return duration_cast<double, time_unit>(b - a);
+        return duration<double, time_unit>(b - a).count();
     }
     double ms_elapsed() {
-    	return elapsed<std::chrono::milliseconds>();
+    	return elapsed<std::milli>();
     }
 };
 
