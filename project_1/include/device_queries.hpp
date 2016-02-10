@@ -8,7 +8,7 @@
 std::vector<int> get_devices() {
     std::vector<int> devices;
     int device_count = 0;
-    if (cudaGetDeviceCount(&device_count) == CudaSuccess && device_count) {
+    if (cudaGetDeviceCount(&device_count) == cudaSuccess && device_count) {
         for (int i = 0; i < device_count; ++i) {
         	devices.push_back(i);
         }
@@ -20,9 +20,10 @@ std::vector<int> get_devices() {
 
 size_t get_global_mem(const int device_id) {
     cudaDeviceProp prop_struct;
-    if (cudaGetDeviceProperties(&prop_struct, device_id) == CudaSuccess) {
+    if (cudaGetDeviceProperties(&prop_struct, device_id) == cudaSuccess) {
         return prop_struct.totalGlobalMem;
     }
+    throw std::runtime_error("Bad device id for query!");
 }
 
 
