@@ -2,6 +2,8 @@
 #include "../include/device_queries.hpp"
 #include "../include/timer.hpp"
 
+#include <iostream>
+
 int main(int argc, char **argv) {
     simple_timer a;
     a.begin();
