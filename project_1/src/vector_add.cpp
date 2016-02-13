@@ -12,3 +12,6 @@ vector<float> cpu_addition(const vector<float> &a, const vector<float> &b) {
 bool check_equal(const vector<float> &a, const vector<float> &b) {
     return std::equal(a.cbegin(), a.cend(), b.cbegin());
 }
+
+
+

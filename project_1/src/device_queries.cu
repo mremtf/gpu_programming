@@ -23,3 +23,11 @@ size_t get_global_mem(const int device_id) {
     }
     throw std::runtime_error("Bad device id for query!");
 }
+
+std::pair<int,int> get_dims(const int device_id) {
+    cudaDeviceProp prop_struct;
+    if(cudaGetDeviceProperties(&prop_struct, device_id) == cudaSuccess) {
+        return std::pair<int,int>(prop_struct.maxThreadsDim[0],prop_struct.maxGridSize[0]);
+    }
+    throw std::runtime_error("Bad device id for dim query!");
+}
