@@ -11,6 +11,7 @@ bool cpu_transpose(const std::vector<float>& in, const std::vector<float>& out, 
 	if (!src || !dst || N == 0 || M == 0) {
 		return false;
 	}
+
 	for(auto n = 0; n<N*M; n++) {
 		const size_t row = n/N;
 		const size_t col = n%N;
@@ -18,6 +19,10 @@ bool cpu_transpose(const std::vector<float>& in, const std::vector<float>& out, 
 	}
 	return true;
 }
+
+bool equal_transpose() {
+	
+};
 
 void launch_kernels_and_report(const options_t &opts) {
     return;
