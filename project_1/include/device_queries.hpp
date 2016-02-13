@@ -12,6 +12,6 @@ std::vector<int> get_devices();
 size_t get_global_mem(const int device_id);
 
 // returns thread_x_max and grid_x_max
-std::pair<int,int> get_dims(const int device_id)
+std::pair<int,int> get_dims(const int device_id);
 
 #endif
