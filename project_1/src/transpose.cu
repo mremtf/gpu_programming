@@ -1,6 +1,9 @@
 #include <vector>
 
-#include "../include/transpose.hpp"
+#include "transpose.hpp"
+#include "parameters.hpp"
+#include "device_queries.hpp"
+#include "shared_utilities.hpp"
 
 bool cpu_transpose(const std::vector<float>& in, const std::vector<float>& out, const size_t N, const size_t M) {
 	const float *src = src.data[0];
@@ -14,4 +17,8 @@ bool cpu_transpose(const std::vector<float>& in, const std::vector<float>& out, 
 		dst[n] = src[M*col + row];
 	}
 	return true;
+}
+
+void launch_kernels_and_report(const options_t &opts) {
+    return;
 }
