@@ -11,7 +11,7 @@ using std::vector;
 
 vector<float> cpu_addition(const vector<float> &a, const vector<float> &b) {
     vector<float> results(a);
-    std::transform(a.begin(), a.end(), b.cbegin(), b.cend(), std::plus<float>());
+    std::transform(results.begin(), results.end(), b.cbegin(), results.begin(), std::plus<float>());
     return a;
 }
 
@@ -28,5 +28,5 @@ ideally, last block on last device
 */
 
 void launch_kernels_and_report(const options_t &opts) {
-
+	return;
 }
