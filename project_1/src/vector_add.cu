@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <functional>
+
 #include "vector_add.hpp"
 #include "parameters.hpp"
 #include "device_queries.hpp"
