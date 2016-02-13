@@ -7,7 +7,7 @@ CU_CFLAGS = -c -std=c++11 -Iinclude -Xcompiler -Wall
 
 LDFLAGS = -lboost_program_options
 
-SOURCES = vector_main.cpp parameters.cpp
+SOURCES = vector_main.cpp parameters.cpp shared_utilities.cpp
 OBJECTS = $(SOURCES:.cpp=.cpp.o)
 
 CU_SOURCES = device_queries.cu vector_add.cu

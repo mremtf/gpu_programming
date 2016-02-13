@@ -2,6 +2,7 @@
 #define _VECTOR_ADD_HPP__
 
 #include <vector>
+#include "parameters.hpp"
 
 using std::vector;
 
@@ -9,6 +10,6 @@ vector<float> cpu_addition(const vector<float> &a, const vector<float> &b);
 
 bool check_equal(const vector<float> &a, const vector<float> &b);
 
-std::vector<float> generate_vector(size_t n);
+void launch_kernels_and_report(const options_t &opts);
 
 #endif
