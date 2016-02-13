@@ -1,6 +1,7 @@
-#include "../include/parameters.hpp"
-#include "../include/device_queries.hpp"
-#include "../include/timer.hpp"
+#include "parameters.hpp"
+#include "device_queries.hpp"
+#include "timer.hpp"
+#include "vector_add.hpp"
 
 #include <iostream>
 
@@ -16,4 +17,10 @@ int main(int argc, char **argv) {
     for (const auto i : devices) {
         std::cout << "Device " << i << " Global mem: " << get_global_mem(i) << std::endl;
     }
+
+    std::cout << "Get vec of 5 rand: ";
+    for (const auto num : generate_vector(5)) {
+        std::cout << num << " ";
+    }
+    std::cout << std::endl;
 }

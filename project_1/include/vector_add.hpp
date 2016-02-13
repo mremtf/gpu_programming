@@ -9,4 +9,6 @@ vector<float> cpu_addition(const vector<float> &a, const vector<float> &b);
 
 bool check_equal(const vector<float> &a, const vector<float> &b);
 
+std::vector<float> generate_vector(size_t n);
+
 #endif

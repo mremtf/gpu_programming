@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <random>
 #include <functional>
 
 #include "vector_add.hpp"
@@ -19,6 +20,15 @@ bool check_equal(const vector<float> &a, const vector<float> &b) {
     return std::equal(a.cbegin(), a.cend(), b.cbegin());
 }
 
+std::vector<float> generate_vector(size_t n) {
+    std::default_random_engine gen;
+    std::uniform_real_distribution<float> dist(0, 100);
+    auto get_num = std::bind(dist, std::ref(gen));
+    std::vector<float> vec(n);
+    std::generate(vec.begin(), vec.end(), get_num);
+    return vec;
+}
+
 /*
 calculate step, calculate final index, if step doesn't work, specify final index and special step
 
@@ -28,5 +38,5 @@ ideally, last block on last device
 */
 
 void launch_kernels_and_report(const options_t &opts) {
-	return;
+    return;
 }
