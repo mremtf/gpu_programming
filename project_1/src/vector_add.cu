@@ -32,7 +32,7 @@ __global__ void cuda_vector_add(float *a, float *b, unsigned step, unsigned tota
                                 unsigned fix_step) {
     unsigned position = blockDim.x * blockIdx.x + threadIdx.x;
     position *= step;
-    //printf("%d\t%d\t%d\t%d\n", blockDim.x, blockIdx.x, threadIdx.x, position);
+    // printf("%d\t%d\t%d\t%d\n", blockDim.x, blockIdx.x, threadIdx.x, position);
     // This is a really dumb edge case clearly used to break the code, but
     // hell if I'm missing points for not catching when you request more threads than elements!
     if (position < total) {
@@ -46,7 +46,7 @@ __global__ void cuda_vector_add(float *a, float *b, unsigned step, unsigned tota
         a += position;
         b += position;
         for (int i = 0; i < step; ++i, ++a, ++b) {
-            //printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
+            // printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
             *a += *b;
         }
     }
@@ -105,9 +105,9 @@ void launch_kernels_and_report(const options_t &opts) {
             // with a very low mem utilization (read: testing)
             // it will end up with a step of 0 if you get total_threads over n_elem
             // So I guess hardcode 1 and nop anything off the end of the vector
-            config[i].step = 1;
+            config[i].step         = 1;
             config[i].fix_position = UINT_MAX;
-            config[i].fix_step = 1;
+            config[i].fix_step     = 1;
         } else {
             const bool offset_needed = (config[i].step * thread_total) != float_vec_size[i];
             if (offset_needed) {
@@ -125,9 +125,16 @@ void launch_kernels_and_report(const options_t &opts) {
     // prepare and launch! Woooooo.
     for (int i = 0; i < num_devices; ++i) {
         timer time;
+        /*
         std::cout << "Dev: " << config[i].device << " Step: " << config[i].step << " Fix_P: " << config[i].fix_position
                   << " Fix_s: " << config[i].fix_step << " Threads: " << thread_total
                   << " Val total: " << config[i].a.size() << std::endl;
+        */
+
+        if (cudaSetDevice(config[i].device) != cudaSuccess) {
+            throw std::runtime_error("could not select device!");
+        }
+
         time.begin();
 
         if (cudaMalloc(&config[i].vec_a_device, float_vec_size[i] * sizeof(float)) != cudaSuccess
