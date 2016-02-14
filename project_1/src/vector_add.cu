@@ -44,11 +44,11 @@ __global__ void cuda_vector_add(float *a, float *b, int step, int fix_position, 
         step = fix_step;
     }
 
-    a += posiiton;
+    a += position;
     b += position;
 
     for (int i = 0; i < step; ++i, ++a, ++b) {
-        *a += *b
+        *a += *b;
     }
 }
 
@@ -102,7 +102,7 @@ void launch_kernels_and_report(const options_t &opts) {
         config[i].step           = float_vec_size[i] / thread_total;
         const bool offset_needed = (config[i].step * thread_total) != float_vec_size[i];
         if (offset_needed) {
-            config[i].fix_position = step * (thread_total - 1);
+            config[i].fix_position = config[i].step * (thread_total - 1);
             config[i].fix_step     = config[i].step + (float_vec_size[i] - (config[i].step * thread_total));
         } else {
             config[i].fix_position = UINT_MAX;        // should never trigger
@@ -117,23 +117,25 @@ void launch_kernels_and_report(const options_t &opts) {
         timer time;
         time.begin();
 
-        if (cudaMalloc(&config[i].vec_a_device, float_vec_size * sizeof(float)) != cudaSuccess
-            || cudaMalloc(&config[i].vec_b_device, float_vec_size * sizeof(float)) != cudaSuccess) {
+        if (cudaMalloc(&config[i].vec_a_device, float_vec_size[i] * sizeof(float)) != cudaSuccess
+            || cudaMalloc(&config[i].vec_b_device, float_vec_size[i] * sizeof(float)) != cudaSuccess) {
             throw std::runtime_error("Failed to malloc vector!");
         }
-        if (cudaMemcpy(config[i].vec_a_device, config[i].a.data(), float_vec_size * sizeof(float),
+        if (cudaMemcpy(config[i].vec_a_device, config[i].a.data(), float_vec_size[i] * sizeof(float),
                        cudaMemcpyHostToDevice)
                 != cudaSuccess
-            || cudaMemcpy(config[i].vec_b_device, config[i].b.data(), float_vec_size * sizeof(float),
+            || cudaMemcpy(config[i].vec_b_device, config[i].b.data(), float_vec_size[i] * sizeof(float),
                           cudaMemcpyHostToDevice)
                    != cudaSuccess) {
             throw std::runtime_error("Failed to copy data to device!");
         }
 
-        cuda_vector_add<<<blocks, threads>>>(config[i].vec_a_device, config[i].vec_b_device, config[i].step,
-                                             config[i].fix_position, config[i].fix_step);
+        cuda_vector_add<<<blocks, threads>>>((float *) config[i].vec_a_device, (float *) config[i].vec_b_device,
+                                             config[i].step, config[i].fix_position, config[i].fix_step);
 
-        if (cudaMemcpy(config[i].c.data(), config[i].vec_a_device, cudaMemcpyDeviceToHost) != cudaSuccess) {
+        if (cudaMemcpy(config[i].c.data(), config[i].vec_a_device, float_vec_size[i] * sizeof(float),
+                       cudaMemcpyDeviceToHost)
+            != cudaSuccess) {
             throw std::runtime_error("Could not copy data back! (or kernel launch failed?)");
         }
 
@@ -142,7 +144,7 @@ void launch_kernels_and_report(const options_t &opts) {
 
         time.end();
 
-        std::cout << "GPU_" << config[i].device << " time: " << time.ms_elapsed() << " ms" << std::cout;
+        std::cout << "GPU_" << config[i].device << " time: " << time.ms_elapsed() << " ms" << std::endl;
 
         if (validate) {
             timer cpu_time;
