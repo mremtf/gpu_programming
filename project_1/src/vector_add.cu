@@ -28,8 +28,9 @@ if special step doesn't exist, FFFFFFFF it. only warp divergence will be in one 
 ideally, last block on last device
 */
 
-__global__ void cuda_vector_add(float *a, float *b, int step, int fix_position, int fix_step) {
+__global__ void cuda_vector_add(float *a, float *b, unsigned step, unsigned fix_position, unsigned fix_step) {
     unsigned position = blockDim.x * blockIdx.x + threadIdx.x;
+    position *= step;
     // Interesting thing to test
     // ternary here vs if. Only divergence should be last warp in last block
     // But the ternary will probably slow down everything?
@@ -43,6 +44,11 @@ __global__ void cuda_vector_add(float *a, float *b, int step, int fix_position, 
     if (position == fix_position) {
         thread_step = fix_step;
     }
+    for (int i = 0; i < thread_step; ++i, ++position) {
+        //printf("%p %p %i %f %f\n", a, b, position, a[position], b[position]);
+        a[position] += b[position];
+    }
+    /*
     float *arr_one = a;
     float *arr_two = b;
     arr_one += position;
@@ -51,6 +57,7 @@ __global__ void cuda_vector_add(float *a, float *b, int step, int fix_position, 
     for (int i = 0; i < thread_step; ++i, ++arr_one, ++arr_two) {
         *arr_one += *arr_two;
     }
+    */
 }
 
 using device_config_t = struct {
@@ -116,6 +123,9 @@ void launch_kernels_and_report(const options_t &opts) {
     // prepare and launch! Woooooo.
     for (int i = 0; i < num_devices; ++i) {
         timer time;
+        std::cout << "Dev: " << config[i].device << " Step: " << config[i].step << " Fix_P: " << config[i].fix_position
+                  << " Fix_s: " << config[i].fix_step << " Threads: " << thread_total
+                  << " Val total: " << config[i].a.size() << std::endl;
         time.begin();
 
         if (cudaMalloc(&config[i].vec_a_device, float_vec_size[i] * sizeof(float)) != cudaSuccess
