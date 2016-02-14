@@ -2,9 +2,10 @@
 #include <random>
 #include <algorithm>
 #include "shared_utilities.hpp"
+#include <chrono>
 
 std::vector<float> generate_vector(size_t n) {
-    std::default_random_engine gen;
+    std::default_random_engine gen(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<float> dist(0, 100);
     auto get_num = std::bind(dist, std::ref(gen));
     std::vector<float> vec(n);
