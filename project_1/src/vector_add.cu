@@ -62,8 +62,8 @@ using device_config_t = struct {
 };
 
 void launch_kernels_and_report(const options_t &opts) {
-    const unsigned threads    = opts.threads;
-    const unsigned blocks     = opts.blocks;
+    const int threads    = opts.threads;
+    const int blocks     = opts.blocks;
     const bool validate       = opts.validate;
     const bool multi          = opts.multi;
     const double util         = opts.utilization;
@@ -73,6 +73,8 @@ void launch_kernels_and_report(const options_t &opts) {
         throw std::runtime_error("Thread/Block count of 0!");
     }
 
+    std::cout << "Starting config and data generation, this may take awhile..." << std::endl;
+
     std::vector<int> devices = get_devices();
     if (!multi) {
         devices.resize(1);
@@ -80,7 +82,7 @@ void launch_kernels_and_report(const options_t &opts) {
     const size_t num_devices = devices.size();
 
     std::vector<size_t> float_vec_size(num_devices);
-    for (int i = 0; i < num_devices; ++i) {
+    for (unsigned i = 0; i < num_devices; ++i) {
         float_vec_size[i] = get_global_mem(devices[i]) / sizeof(float) * util / 2.0;
         // number of total floats, get the utilization, div in two because a + b
         // resulting size is the size for vectors a and b
@@ -90,7 +92,7 @@ void launch_kernels_and_report(const options_t &opts) {
     // I'm just going to make smaller ones since there's no real difference
 
     std::vector<device_config_t> config(num_devices);
-    for (int i = 0; i < num_devices; ++i) {
+    for (unsigned i = 0; i < num_devices; ++i) {
         auto dim_pair = get_dims(devices[i]);
         if (dim_pair.first < threads || dim_pair.second < blocks) {
             throw std::runtime_error("Block/thread count outside device dims!");
@@ -123,7 +125,7 @@ void launch_kernels_and_report(const options_t &opts) {
     std::cout << "Configuration complete, executing across cards." << std::endl;
 
     // prepare and launch! Woooooo.
-    for (int i = 0; i < num_devices; ++i) {
+    for (unsigned i = 0; i < num_devices; ++i) {
         timer time;
         /*
         std::cout << "Dev: " << config[i].device << " Step: " << config[i].step << " Fix_P: " << config[i].fix_position
