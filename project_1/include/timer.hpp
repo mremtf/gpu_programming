@@ -6,7 +6,7 @@
 using namespace std::chrono;
 using hrc = high_resolution_clock;
 
-class simple_timer {
+class timer {
   private:
     hrc::time_point a, b;
 
