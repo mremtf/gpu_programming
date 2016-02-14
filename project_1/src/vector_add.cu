@@ -16,8 +16,8 @@ using std::vector;
 
 vector<float> cpu_addition(const vector<float> &a, const vector<float> &b) {
     vector<float> results(a);
-    std::transform(results.begin(), results.end(), b.cbegin(), results.begin(), std::plus<float>());
-    return a;
+    std::transform(a.begin(), a.end(), b.cbegin(), results.begin(), std::plus<float>());
+    return results;
 }
 
 /*
@@ -39,16 +39,17 @@ __global__ void cuda_vector_add(float *a, float *b, int step, int fix_position, 
     // so we'll make local copies of the important things?
 
     // This will explode if it's not registers
-
+    unsigned thread_step = step;
     if (position == fix_position) {
-        step = fix_step;
+        thread_step = fix_step;
     }
+    float *arr_one = a;
+    float *arr_two = b;
+    arr_one += position;
+    arr_two += position;
 
-    a += position;
-    b += position;
-
-    for (int i = 0; i < step; ++i, ++a, ++b) {
-        *a += *b;
+    for (int i = 0; i < thread_step; ++i, ++arr_one, ++arr_two) {
+        *arr_one += *arr_two;
     }
 }
 
@@ -154,6 +155,11 @@ void launch_kernels_and_report(const options_t &opts) {
             std::cout << "CPU time: " << cpu_time.ms_elapsed() << " ms" << std::endl;
             if (!check_equal(config[i].c, cpu_result)) {
                 std::cout << "VERIFICATION FAILED (epsilon issue?)" << std::endl;
+                std::cout << config[i].a[0] << " " << config[i].a[1] << " " << config[i].a[2] << std::endl;
+                std::cout << config[i].b[0] << " " << config[i].b[1] << " " << config[i].b[2] << std::endl << std::endl;
+
+                std::cout << config[i].c[0] << " " << config[i].c[1] << " " << config[i].c[2] << std::endl;
+                std::cout << cpu_result[0] << " " << cpu_result[1] << " " << cpu_result[2] << std::endl;
             }
         }
     }
