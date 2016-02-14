@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "shared_utilities.hpp"
 #include <chrono>
+#include <functional>
 
 std::vector<float> generate_vector(size_t n) {
     std::default_random_engine gen(std::chrono::system_clock::now().time_since_epoch().count());
