@@ -178,7 +178,7 @@ void launch_kernels_and_report(const options_t &opts) {
             std::vector<float> cpu_result = cpu_addition(a, b);
             cpu_time.end();
             std::cout << "CPU time: " << cpu_time.ms_elapsed() << " ms" << std::endl;
-            if (!check_equal(config[i].c, cpu_result)) {
+            if (!check_equal(c, cpu_result)) {
                 std::cout << "VERIFICATION FAILED (epsilon issue?)" << std::endl;
                 std::cout << a[0] << " " << a[1] << " " << a[2] << std::endl;
                 std::cout << b[0] << " " << b[1] << " " << b[2] << std::endl << std::endl;
