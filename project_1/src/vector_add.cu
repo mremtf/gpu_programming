@@ -28,36 +28,28 @@ if special step doesn't exist, FFFFFFFF it. only warp divergence will be in one 
 ideally, last block on last device
 */
 
-__global__ void cuda_vector_add(float *a, float *b, unsigned step, unsigned fix_position, unsigned fix_step) {
+__global__ void cuda_vector_add(float *a, float *b, unsigned step, unsigned total, unsigned fix_position,
+                                unsigned fix_step) {
     unsigned position = blockDim.x * blockIdx.x + threadIdx.x;
     position *= step;
-    // Interesting thing to test
-    // ternary here vs if. Only divergence should be last warp in last block
-    // But the ternary will probably slow down everything?
-    // It would avoid a warp divergence, though!
-
-    // According to what I read, params are in constant memory
-    // so we'll make local copies of the important things?
-
-    // This will explode if it's not registers
-    unsigned thread_step = step;
-    if (position == fix_position) {
-        thread_step = fix_step;
+    //printf("%d\t%d\t%d\t%d\n", blockDim.x, blockIdx.x, threadIdx.x, position);
+    // This is a really dumb edge case clearly used to break the code, but
+    // hell if I'm missing points for not catching when you request more threads than elements!
+    if (position < total) {
+        // Interesting thing to test
+        // ternary here vs if. Only divergence should be last warp in last block
+        // But the ternary will probably slow down everything?
+        // It would avoid a warp divergence, though!
+        if (position == fix_position) {
+            step = fix_step;
+        }
+        a += position;
+        b += position;
+        for (int i = 0; i < step; ++i, ++a, ++b) {
+            //printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
+            *a += *b;
+        }
     }
-    for (int i = 0; i < thread_step; ++i, ++position) {
-        //printf("%p %p %i %f %f\n", a, b, position, a[position], b[position]);
-        a[position] += b[position];
-    }
-    /*
-    float *arr_one = a;
-    float *arr_two = b;
-    arr_one += position;
-    arr_two += position;
-
-    for (int i = 0; i < thread_step; ++i, ++arr_one, ++arr_two) {
-        *arr_one += *arr_two;
-    }
-    */
 }
 
 using device_config_t = struct {
@@ -103,18 +95,28 @@ void launch_kernels_and_report(const options_t &opts) {
         if (dim_pair.first < threads || dim_pair.second < blocks) {
             throw std::runtime_error("Block/thread count outside device dims!");
         }
-        config[i].device         = devices[i];
-        config[i].a              = generate_vector(float_vec_size[i]);
-        config[i].b              = generate_vector(float_vec_size[i]);
-        config[i].c              = std::vector<float>(float_vec_size[i]);
-        config[i].step           = float_vec_size[i] / thread_total;
-        const bool offset_needed = (config[i].step * thread_total) != float_vec_size[i];
-        if (offset_needed) {
-            config[i].fix_position = config[i].step * (thread_total - 1);
-            config[i].fix_step     = config[i].step + (float_vec_size[i] - (config[i].step * thread_total));
+        config[i].device = devices[i];
+        config[i].a      = generate_vector(float_vec_size[i]);
+        config[i].b      = generate_vector(float_vec_size[i]);
+        config[i].c      = std::vector<float>(float_vec_size[i]);
+        config[i].step = float_vec_size[i] / thread_total;
+        if (config[i].step == 0) {
+            std::cout << "More threads than values! Rude!" << std::endl;
+            // with a very low mem utilization (read: testing)
+            // it will end up with a step of 0 if you get total_threads over n_elem
+            // So I guess hardcode 1 and nop anything off the end of the vector
+            config[i].step = 1;
+            config[i].fix_position = UINT_MAX;
+            config[i].fix_step = 1;
         } else {
-            config[i].fix_position = UINT_MAX;        // should never trigger
-            config[i].fix_step     = config[i].step;  // but just in case
+            const bool offset_needed = (config[i].step * thread_total) != float_vec_size[i];
+            if (offset_needed) {
+                config[i].fix_position = config[i].step * (thread_total - 1);
+                config[i].fix_step     = config[i].step + (float_vec_size[i] - (config[i].step * thread_total));
+            } else {
+                config[i].fix_position = UINT_MAX;        // should never trigger
+                config[i].fix_step     = config[i].step;  // but just in case
+            }
         }
     }
 
@@ -142,7 +144,8 @@ void launch_kernels_and_report(const options_t &opts) {
         }
 
         cuda_vector_add<<<blocks, threads>>>((float *) config[i].vec_a_device, (float *) config[i].vec_b_device,
-                                             config[i].step, config[i].fix_position, config[i].fix_step);
+                                             config[i].step, float_vec_size[i], config[i].fix_position,
+                                             config[i].fix_step);
 
         if (cudaMemcpy(config[i].c.data(), config[i].vec_a_device, float_vec_size[i] * sizeof(float),
                        cudaMemcpyDeviceToHost)
