@@ -3,12 +3,21 @@
 
 // Throws all sorts of stuff if we don't get proper params filled out
 
+/*
 using options_t = struct {
     bool validate;
     bool multi;
     unsigned blocks, threads;
     double utilization;
 };
+*/
+// Because GCC is a bad compiler
+typedef struct {
+	bool validate;
+    bool multi;
+    unsigned blocks, threads;
+    double utilization;
+} options_t;
 
 options_t process_params(int argc, char *argv[]);
 
