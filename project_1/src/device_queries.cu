@@ -1,6 +1,7 @@
 #include "device_queries.hpp"
 
 #include <cuda_runtime_api.h>
+#include <exception>
 // Functions to query device count and the global memory of a device
 
 std::vector<int> get_devices() {
