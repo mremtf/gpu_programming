@@ -12,6 +12,7 @@ std::vector<float> generate_vector(size_t n) {
     std::vector<float> vec(n);
     // std::generate(vec.begin(), vec.end(), get_num);
     float *data = vec.data();
+    srand(std::chrono::system_clock::now().time_since_epoch().count());
     for (size_t i = 0; i < n; ++i, ++data) {
     	*data = ((float)rand())/((float)RAND_MAX/100.0);
     }
