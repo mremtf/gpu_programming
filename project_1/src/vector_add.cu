@@ -55,15 +55,14 @@ __global__ void cuda_vector_add(float *a, float *b, unsigned step, unsigned tota
 using device_config_t = struct {
     int device;
     void *vec_a_device, *vec_b_device;  // vecs gets summed into a
-    std::vector<float> a, b, c;
     unsigned step;
     unsigned fix_position;  // UINT_MAX
     unsigned fix_step;
 };
 
 void launch_kernels_and_report(const options_t &opts) {
-    const int threads    = opts.threads;
-    const int blocks     = opts.blocks;
+    const int threads         = opts.threads;
+    const int blocks          = opts.blocks;
     const bool validate       = opts.validate;
     const bool multi          = opts.multi;
     const double util         = opts.utilization;
@@ -98,9 +97,9 @@ void launch_kernels_and_report(const options_t &opts) {
             throw std::runtime_error("Block/thread count outside device dims!");
         }
         config[i].device = devices[i];
-        config[i].a      = generate_vector(float_vec_size[i]);
-        config[i].b      = generate_vector(float_vec_size[i]);
-        config[i].c      = std::vector<float>(float_vec_size[i]);
+        // config[i].a      = generate_vector(float_vec_size[i]);
+        // config[i].b      = generate_vector(float_vec_size[i]);
+        // config[i].c      = std::vector<float>(float_vec_size[i]);
         config[i].step = float_vec_size[i] / thread_total;
         if (config[i].step == 0) {
             std::cout << "More threads than values! Rude!" << std::endl;
@@ -133,6 +132,10 @@ void launch_kernels_and_report(const options_t &opts) {
                   << " Val total: " << config[i].a.size() << std::endl;
         */
 
+        std::vector<float> a = generate_vector(float_vec_size[i]);
+        std::vector<float> b = generate_vector(float_vec_size[i]);
+        std::vector<float> c = std::vector<float>(float_vec_size[i]);
+
         if (cudaSetDevice(config[i].device) != cudaSuccess) {
             throw std::runtime_error("could not select device!");
         }
@@ -143,10 +146,10 @@ void launch_kernels_and_report(const options_t &opts) {
             || cudaMalloc(&config[i].vec_b_device, float_vec_size[i] * sizeof(float)) != cudaSuccess) {
             throw std::runtime_error("Failed to malloc vector!");
         }
-        if (cudaMemcpy(config[i].vec_a_device, config[i].a.data(), float_vec_size[i] * sizeof(float),
+        if (cudaMemcpy(config[i].vec_a_device, a.data(), float_vec_size[i] * sizeof(float),
                        cudaMemcpyHostToDevice)
                 != cudaSuccess
-            || cudaMemcpy(config[i].vec_b_device, config[i].b.data(), float_vec_size[i] * sizeof(float),
+            || cudaMemcpy(config[i].vec_b_device, b.data(), float_vec_size[i] * sizeof(float),
                           cudaMemcpyHostToDevice)
                    != cudaSuccess) {
             throw std::runtime_error("Failed to copy data to device!");
@@ -156,7 +159,7 @@ void launch_kernels_and_report(const options_t &opts) {
                                              config[i].step, float_vec_size[i], config[i].fix_position,
                                              config[i].fix_step);
 
-        if (cudaMemcpy(config[i].c.data(), config[i].vec_a_device, float_vec_size[i] * sizeof(float),
+        if (cudaMemcpy(c.data(), config[i].vec_a_device, float_vec_size[i] * sizeof(float),
                        cudaMemcpyDeviceToHost)
             != cudaSuccess) {
             throw std::runtime_error("Could not copy data back! (or kernel launch failed?)");
@@ -172,15 +175,15 @@ void launch_kernels_and_report(const options_t &opts) {
         if (validate) {
             timer cpu_time;
             cpu_time.begin();
-            std::vector<float> cpu_result = cpu_addition(config[i].a, config[i].b);
+            std::vector<float> cpu_result = cpu_addition(a, b);
             cpu_time.end();
             std::cout << "CPU time: " << cpu_time.ms_elapsed() << " ms" << std::endl;
             if (!check_equal(config[i].c, cpu_result)) {
                 std::cout << "VERIFICATION FAILED (epsilon issue?)" << std::endl;
-                std::cout << config[i].a[0] << " " << config[i].a[1] << " " << config[i].a[2] << std::endl;
-                std::cout << config[i].b[0] << " " << config[i].b[1] << " " << config[i].b[2] << std::endl << std::endl;
+                std::cout << a[0] << " " << a[1] << " " << a[2] << std::endl;
+                std::cout << b[0] << " " << b[1] << " " << b[2] << std::endl << std::endl;
 
-                std::cout << config[i].c[0] << " " << config[i].c[1] << " " << config[i].c[2] << std::endl;
+                std::cout << c[0] << " " << c[1] << " " << c[2] << std::endl;
                 std::cout << cpu_result[0] << " " << cpu_result[1] << " " << cpu_result[2] << std::endl;
             }
         }
