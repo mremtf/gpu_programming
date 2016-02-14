@@ -16,10 +16,6 @@ vector<float> cpu_addition(const vector<float> &a, const vector<float> &b) {
     return a;
 }
 
-bool check_equal(const vector<float> &a, const vector<float> &b) {
-    return std::equal(a.cbegin(), a.cend(), b.cbegin());
-}
-
 /*
 calculate step, calculate final index, if step doesn't work, specify final index and special step
 

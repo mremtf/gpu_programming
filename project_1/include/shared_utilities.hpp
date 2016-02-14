@@ -3,4 +3,6 @@
 
 std::vector<float> generate_vector(size_t n);
 
+bool check_equal(const vector<float> &a, const vector<float> &b);
+
 #endif

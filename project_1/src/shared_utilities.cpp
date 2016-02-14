@@ -11,3 +11,7 @@ std::vector<float> generate_vector(size_t n) {
     std::generate(vec.begin(), vec.end(), get_num);
     return vec;
 }
+
+bool check_equal(const vector<float> &a, const vector<float> &b) {
+    return std::equal(a.cbegin(), a.cend(), b.cbegin());
+}
