@@ -127,7 +127,7 @@ void launch_kernels_and_report(const options_t &opts) {
         
         std::cout << "Dev: " << config[i].device << " Step: " << config[i].step << " Fix_P: " << config[i].fix_position
                   << " Fix_s: " << config[i].fix_step << " Threads: " << thread_total
-                  << " Val total: " << config[i].a.size() << std::endl;
+                  << " Val total: " << float_vec_size[i] << std::endl;
 
         std::vector<float> a = generate_vector(float_vec_size[i]);
         std::vector<float> b = generate_vector(float_vec_size[i]);
