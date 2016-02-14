@@ -72,8 +72,6 @@ void launch_kernels_and_report(const options_t &opts) {
         throw std::runtime_error("Thread/Block count of 0!");
     }
 
-    std::cout << "Starting config and data generation, this may take awhile..." << std::endl;
-
     std::vector<int> devices = get_devices();
     if (!multi) {
         devices.resize(1);
@@ -121,7 +119,7 @@ void launch_kernels_and_report(const options_t &opts) {
         }
     }
 
-    std::cout << "Configuration complete, executing across cards." << std::endl;
+    std::cout << "Configuration complete, generating data and executing." << std::endl;
 
     // prepare and launch! Woooooo.
     for (unsigned i = 0; i < num_devices; ++i) {
