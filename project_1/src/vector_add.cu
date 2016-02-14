@@ -24,6 +24,21 @@ if special step doesn't exist, FFFFFFFF it. only warp divergence will be in one 
 ideally, last block on last device
 */
 
+using device_config_t = struct {
+    int device;
+    void *vec_a_device, *vec_b_device;  // vecs gets summed into a
+    size_t step;
+    size_t final_position;  // SIZE_MAX if it doesn't exist
+    size_t final_step;
+};
+
 void launch_kernels_and_report(const options_t &opts) {
-    return;
+    const unsigned threads = opts.threads;
+    const unsigned blocks  = opts.blocks;
+    const bool validate    = opts.validate;
+    const bool multi       = opts.multi;
+    const double util      = opts.utilization;
+
+    std::vector<int> devices = get_devices();
+    
 }
