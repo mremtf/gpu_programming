@@ -6,11 +6,15 @@
 #include <functional>
 
 std::vector<float> generate_vector(size_t n) {
-    std::default_random_engine gen(std::chrono::system_clock::now().time_since_epoch().count());
-    std::uniform_real_distribution<float> dist(0, 100);
-    auto get_num = std::bind(dist, std::ref(gen));
+    // std::default_random_engine gen(std::chrono::system_clock::now().time_since_epoch().count());
+    // std::uniform_real_distribution<float> dist(0, 100);
+    // auto get_num = std::bind(dist, std::ref(gen));
     std::vector<float> vec(n);
-    std::generate(vec.begin(), vec.end(), get_num);
+    // std::generate(vec.begin(), vec.end(), get_num);
+    float *data = vec.data();
+    for (size_t i = 0; i < n; ++i, ++data) {
+    	*data = ((float)rand())/((float)RAND_MAX/100.0);
+    }
     return vec;
 }
 
