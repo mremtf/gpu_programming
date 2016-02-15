@@ -2,8 +2,8 @@
 CC = g++
 NVCC = nvcc
 
-CFLAGS = -c -Wall -std=c++11 -Iinclude
-CU_CFLAGS = -c -std=c++11 -Iinclude -Xcompiler -Wall
+CFLAGS = -c -Wall -pg -std=c++11 -Iinclude
+CU_CFLAGS = -c --profile -std=c++11 -Iinclude -Xcompiler -Wall
 
 LDFLAGS = -lboost_program_options
 
