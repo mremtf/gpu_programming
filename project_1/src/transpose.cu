@@ -20,10 +20,32 @@ bool cpu_transpose(const std::vector<float>& in, const std::vector<float>& out, 
 	return true;
 }
 
-bool equal_transpose() {
-	
-};
+__global__ transpose_global (const float* in_matrix, float* out_matrix, const size_t rows, const size_t cols) {
+	const size_t x = blockIdx.x * TILE_DIM + threadIdx.x;
+  const size_t y = blockIdx.y * TILE_DIM + threadIdx.y;
+	const width = gridDim.x * TILE_DIM;
+
+		  for (int j = 0; j < TILE_DIM; j+= BLOCK_ROWS)
+				    odata[(y+j)*width + x] = idata[(y+j)*width + x];
+}
+
+__global__ transpose_shared(float* in_matrix, float* out_matrix, size_t rows, size_t cols) {
+
+}
+
 
 void launch_kernels_and_report(const options_t &opts) {
+    const int threads         = opts.threads;
+    const int blocks          = opts.blocks;
+    const bool validate       = opts.validate;
+    const bool multi          = opts.multi;
+    const double util         = opts.utilization;
+    const size_t thread_total = blocks * threads;
+
+    if (threads == 0 || blocks == 0) {
+        throw std::runtime_error("Thread/Block count of 0!");
+    }
+
+
     return;
 }
