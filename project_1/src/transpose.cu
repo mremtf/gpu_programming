@@ -65,7 +65,46 @@ void launch_kernels_and_report(const options_t &opts) {
         throw std::runtime_error("Thread/Block count of 0!");
     }
 
-		float mem = get_global_mem(devices[i]) / sizeof(float) * util / 2.0;
+    std::vector<int> devices = get_devices();
+		
+		if (devices.size()) {
+			std::cout << "No devices" << std::endl;
+			return;
+		}
+	
+    size_t mem_size = get_global_mem(0) / sizeof(float) * util / 2.0;
+    // number of total floats, get the utilization, div in two because a + b
+    // resulting size is the size for vectors a and b
+
+    // Instead of making a giant contiguous vector and serving out slices to the devices
+    // I'm just going to make smaller ones since there's no real difference
+
+    device_config_t config;
+    auto dim_pair = get_dims(config);
+    if (dim_pair.first < threads || dim_pair.second < blocks) {
+    	throw std::runtime_error("Block/thread count outside device dims!");
+    }
+    config.device = 0;
+    config.step = mem_size / thread_total;
+    if (config.step == 0) {
+    	std::cout << "More threads than values! Rude!" << std::endl;
+      // with a very low mem utilization (read: testing)
+      // it will end up with a step of 0 if you get total_threads over n_elem
+      // So I guess hardcode 1 and nop anything off the end of the vector
+      config.step         = 1;
+      config.fix_position = UINT_MAX;
+      config.fix_step     = 1;
+    } else {
+    	const bool offset_needed = (config.step * thread_total) != float_vec_size[i];
+      if (offset_needed) {
+      	config[i].fix_position = config[i].step * (thread_total - 1);
+        config[i].fix_step     = config[i].step + (float_vec_size[i] - (config[i].step * thread_total));
+      } 
+			else {
+                config[i].fix_position = UINT_MAX;        // should never trigger
+                config[i].fix_step     = config[i].step;  // but just in case
+      }
+    }
 
 		timer gpu_total, gpu_execute;
 
