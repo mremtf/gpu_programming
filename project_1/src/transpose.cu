@@ -1,18 +1,21 @@
 #include <vector>
+#include <iostream>
+#include <stdexcept>
 
 #include "transpose.hpp"
 #include "parameters.hpp"
 #include "device_queries.hpp"
 #include "shared_utilities.hpp"
+#include "timer.hpp"
 
 bool cpu_transpose(const std::vector<float>& in, const std::vector<float>& out, const size_t N, const size_t M) {
-	const float *src = src.data[0];
-	float dst = out.data[0];
+	const float *src = in.data();
+	float *dst = (float*) out.data();
 	if (!src || !dst || N == 0 || M == 0) {
 		return false;
 	}
 
-	for(auto n = 0; n<N*M; n++) {
+	for(unsigned n = 0; n<N*M; n++) {
 		const size_t row = n/N;
 		const size_t col = n%N;
 		dst[n] = src[M*col + row];
@@ -20,7 +23,7 @@ bool cpu_transpose(const std::vector<float>& in, const std::vector<float>& out, 
 	return true;
 }
 
-__global__ transpose_global (float *in, float *out, const unsigned W, const unsigned step, 
+void __global__ transpose_global (float *in, float *out, const unsigned W, unsigned step, 
 		const unsigned total, const unsigned fix_position, unsigned fix_step) {
 
 	  unsigned position = blockDim.x * blockIdx.x + threadIdx.x;
@@ -41,8 +44,8 @@ __global__ transpose_global (float *in, float *out, const unsigned W, const unsi
 				unsigned x = 0; //position - (y * W);  
         for (int i = 0; i < step; ++i, ++position) {
             // printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
-						unsigned y = floor( (float) position/ (float)W);
-						unsigned x = position - (y * W); 
+						y = floor( (float) position/ (float)W);
+						x = position - (y * W); 
             out[x * W + y] += *in;
         }
     }
@@ -62,7 +65,6 @@ void launch_kernels_and_report(const options_t &opts) {
     const int threads         = opts.threads;
     const int blocks          = opts.blocks;
     const bool validate       = opts.validate;
-    const bool multi          = opts.multi;
     const double util         = opts.utilization;
     const size_t thread_total = blocks * threads;
 
@@ -86,7 +88,8 @@ void launch_kernels_and_report(const options_t &opts) {
     // I'm just going to make smaller ones since there's no real difference
 
     device_config_t config;
-    auto dim_pair = get_dims(config);
+
+    auto dim_pair = get_dims(config.device);
     if (dim_pair.first < threads || dim_pair.second < blocks) {
     	throw std::runtime_error("Block/thread count outside device dims!");
     }
@@ -133,14 +136,14 @@ void launch_kernels_and_report(const options_t &opts) {
     	throw std::runtime_error("Failed to malloc vector!");
     }
 
-    if (cudaMemcpy(config.matrix_in_device, a.data(), mem_size * sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess)
+    if (cudaMemcpy(config.matrix_in_device, in.data(), mem_size * sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess)
     {
     	throw std::runtime_error("Failed to copy data to device!");
     }
 
     gpu_execute.begin();
 
-    cuda_vector_add<<<blocks, threads>>>((float *) config.matrix_in_device, (float *) config.matrix_out_device, 
+    transpose_global<<<blocks, threads>>>((float *) config.matrix_in_device, (float *) config.matrix_out_device, 
 																						 config.matrix_width, config.step, mem_size, config.fix_position,
                                              config.fix_step);
 
@@ -159,7 +162,17 @@ void launch_kernels_and_report(const options_t &opts) {
     cudaFree(config.matrix_out_device);
 		gpu_total.end();
 
-    std::cout << "GPU_" << config.device << " time: " << gpu_total.ms_elapsed()	
+    std::cout << "GPU_" << config.device << " time: " << gpu_total.ms_elapsed();	
 
+		if (validate) {
+    	timer cpu_time;
+      cpu_time.begin();
+      cpu_transpose(in,out,config.matrix_width,config.matrix_width);
+      cpu_time.end();
+      std::cout << "CPU time: " << cpu_time.ms_elapsed() << " ms" << std::endl;
+      if (!check_equal(c, out)) {
+				std::cout << "FAILED LOSER" << std::endl;
+    	}
+		}
     return;
 }

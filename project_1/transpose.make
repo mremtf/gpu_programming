@@ -2,11 +2,11 @@
 CC = g++
 NVCC = nvcc
 CFLAGS = -c -Wall -std=c++11 -Iinclude
-CU_CFLAGS = -c -std=c++11 -Iinclude -Xcompiler -Wall
+CU_CFLAGS = -c -pg -std=c++11 -Iinclude -Xcompiler -Wall
 LDFLAGS = -lboost_program_options
-SOURCES = parameters.cpp
+SOURCES = transpose_main.cpp parameters.cpp shared_utilities.cpp
 # vector_add.cpp
-CU_SOURCES = device_queries.cu
+CU_SOURCES = device_queries.cu transpose.cu
 CU_OBJECTS = $(CU_SOURCES:.cu=.cu.o)
 OBJECTS = $(SOURCES:.cpp=.cpp.o)
 EXECUTABLE = transpose
