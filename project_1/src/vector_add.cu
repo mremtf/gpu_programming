@@ -28,8 +28,8 @@ if special step doesn't exist, FFFFFFFF it. only warp divergence will be in one 
 ideally, last block on last device
 */
 
-__global__ void cuda_vector_add(float *a, float *b, unsigned step, unsigned total, unsigned fix_position,
-                                unsigned fix_step) {
+__global__ void cuda_vector_add(float *a, float *b, unsigned step, const unsigned total, const unsigned fix_position,
+                                const unsigned fix_step) {
     unsigned position = blockDim.x * blockIdx.x + threadIdx.x;
     position *= step;
     // printf("%d\t%d\t%d\t%d\n", blockDim.x, blockIdx.x, threadIdx.x, position);
