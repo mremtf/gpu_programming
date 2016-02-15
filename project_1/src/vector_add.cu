@@ -123,8 +123,8 @@ void launch_kernels_and_report(const options_t &opts) {
 
     // prepare and launch! Woooooo.
     for (unsigned i = 0; i < num_devices; ++i) {
-        timer time;
-        
+        timer gpu_total, gpu_execute;
+
         std::cout << "Dev: " << config[i].device << " Step: " << config[i].step << " Fix_P: " << config[i].fix_position
                   << " Fix_s: " << config[i].fix_step << " Threads: " << thread_total
                   << " Val total: " << float_vec_size[i] << std::endl;
@@ -137,37 +137,43 @@ void launch_kernels_and_report(const options_t &opts) {
             throw std::runtime_error("could not select device!");
         }
 
-        time.begin();
+        gpu_total.begin();
 
         if (cudaMalloc(&config[i].vec_a_device, float_vec_size[i] * sizeof(float)) != cudaSuccess
             || cudaMalloc(&config[i].vec_b_device, float_vec_size[i] * sizeof(float)) != cudaSuccess) {
             throw std::runtime_error("Failed to malloc vector!");
         }
-        if (cudaMemcpy(config[i].vec_a_device, a.data(), float_vec_size[i] * sizeof(float),
-                       cudaMemcpyHostToDevice)
+        if (cudaMemcpy(config[i].vec_a_device, a.data(), float_vec_size[i] * sizeof(float), cudaMemcpyHostToDevice)
                 != cudaSuccess
-            || cudaMemcpy(config[i].vec_b_device, b.data(), float_vec_size[i] * sizeof(float),
-                          cudaMemcpyHostToDevice)
+            || cudaMemcpy(config[i].vec_b_device, b.data(), float_vec_size[i] * sizeof(float), cudaMemcpyHostToDevice)
                    != cudaSuccess) {
             throw std::runtime_error("Failed to copy data to device!");
         }
+
+        gpu_execute.begin();
 
         cuda_vector_add<<<blocks, threads>>>((float *) config[i].vec_a_device, (float *) config[i].vec_b_device,
                                              config[i].step, float_vec_size[i], config[i].fix_position,
                                              config[i].fix_step);
 
-        if (cudaMemcpy(c.data(), config[i].vec_a_device, float_vec_size[i] * sizeof(float),
-                       cudaMemcpyDeviceToHost)
+        if (cudaDeviceSynchronize() != cudaSuccess) {
+            throw std::runtime_error("Sync issue! (Launch failure?)");
+        }
+
+        gpu_execute.end();
+
+        if (cudaMemcpy(c.data(), config[i].vec_a_device, float_vec_size[i] * sizeof(float), cudaMemcpyDeviceToHost)
             != cudaSuccess) {
-            throw std::runtime_error("Could not copy data back! (or kernel launch failed?)");
+            throw std::runtime_error("Could not copy data back!");
         }
 
         cudaFree(config[i].vec_a_device);
         cudaFree(config[i].vec_b_device);
 
-        time.end();
+        gpu_total.end();
 
-        std::cout << "GPU_" << config[i].device << " time: " << time.ms_elapsed() << " ms" << std::endl;
+        std::cout << "GPU_" << config[i].device << " time: " << gpu_total.ms_elapsed()
+                  << " ms (execute: " << gpu_execute.ms_elapsed() << " ms)" << std::endl;
 
         if (validate) {
             timer cpu_time;
