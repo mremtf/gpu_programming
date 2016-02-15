@@ -74,7 +74,7 @@ void launch_kernels_and_report(const options_t &opts) {
 
     std::vector<int> devices = get_devices();
 		
-		if (devices.size()) {
+		if (!devices.size()) {
 			std::cout << "No devices" << std::endl;
 			return;
 		}
@@ -87,13 +87,12 @@ void launch_kernels_and_report(const options_t &opts) {
     // Instead of making a giant contiguous vector and serving out slices to the devices
     // I'm just going to make smaller ones since there's no real difference
 
-    device_config_t config;
-
+    device_config_t config;	
+    config.device = 0;
     auto dim_pair = get_dims(config.device);
     if (dim_pair.first < threads || dim_pair.second < blocks) {
     	throw std::runtime_error("Block/thread count outside device dims!");
     }
-    config.device = 0;
     config.step = mem_size / thread_total;
     if (config.step == 0) {
     	std::cout << "More threads than values! Rude!" << std::endl;
