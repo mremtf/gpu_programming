@@ -48,9 +48,14 @@ __global__ transpose_global (float *in, float *out, const unsigned W, const unsi
     }
 }
 
-__global__ transpose_shared(float* in_matrix, float* out_matrix, size_t rows, size_t cols) {
-
-}
+using device_config_t = struct {
+    int device;
+    void *matrix_in_device, *matrix_out_device;  // vecs gets summed into a
+		unsigned matrix_width;
+    unsigned step;
+    unsigned fix_position;  // UINT_MAX
+    unsigned fix_step;
+};
 
 
 void launch_kernels_and_report(const options_t &opts) {
@@ -73,6 +78,7 @@ void launch_kernels_and_report(const options_t &opts) {
 		}
 	
     size_t mem_size = get_global_mem(0) / sizeof(float) * util / 2.0;
+		size_t matrix_n = floor(sqrt((float)mem_size));
     // number of total floats, get the utilization, div in two because a + b
     // resulting size is the size for vectors a and b
 
@@ -95,50 +101,48 @@ void launch_kernels_and_report(const options_t &opts) {
       config.fix_position = UINT_MAX;
       config.fix_step     = 1;
     } else {
-    	const bool offset_needed = (config.step * thread_total) != float_vec_size[i];
+    	const bool offset_needed = (config.step * thread_total) != mem_size;
       if (offset_needed) {
-      	config[i].fix_position = config[i].step * (thread_total - 1);
-        config[i].fix_step     = config[i].step + (float_vec_size[i] - (config[i].step * thread_total));
+      	config.fix_position = config.step * (thread_total - 1);
+        config.fix_step     = config.step + (mem_size - (config.step * thread_total));
       } 
 			else {
-                config[i].fix_position = UINT_MAX;        // should never trigger
-                config[i].fix_step     = config[i].step;  // but just in case
+                config.fix_position = UINT_MAX;        // should never trigger
+                config.fix_step     = config.step;  // but just in case
       }
     }
 
 		timer gpu_total, gpu_execute;
 
-		std::cout << "Dev: " << config[i].device << " Step: " << config[i].step << " Fix_P: " << config[i].fix_position
-              << " Fix_s: " << config[i].fix_step << " Threads: " << thread_total
-              << " Val total: " << float_vec_size[i] << std::endl;
+		std::cout << "Dev: " << config.device << " Step: " << config.step << " Fix_P: " << config.fix_position
+              << " Fix_s: " << config.fix_step << " Threads: " << thread_total
+              << " Val total: " << mem_size << std::endl;
 
-    std::vector<float> in = generate_vector(float_vec_size[i]);
-   	std::vector<float> out = generate_vector(float_vec_size[i]);
-    std::vector<float> c = std::vector<float>(float_vec_size[i]);
+    std::vector<float> in = generate_vector(mem_size);
+   	std::vector<float> out = generate_vector(mem_size);
+    std::vector<float> c = std::vector<float>(mem_size);
 
-    if (cudaSetDevice(config[i].device) != cudaSuccess) {
+    if (cudaSetDevice(config.device) != cudaSuccess) {
     	throw std::runtime_error("could not select device!");
     }
 
     gpu_total.begin();
 
-    if (cudaMalloc(&config[i].vec_a_device, float_vec_size[i] * sizeof(float)) != cudaSuccess
-    			|| cudaMalloc(&config[i].vec_b_device, float_vec_size[i] * sizeof(float)) != cudaSuccess) {
-        throw std::runtime_error("Failed to malloc vector!");
+    if (cudaMalloc(&config.matrix_in_device, mem_size * sizeof(float)) != cudaSuccess
+    			|| cudaMalloc(&config.matrix_out_device, mem_size * sizeof(float)) != cudaSuccess) {
+    	throw std::runtime_error("Failed to malloc vector!");
     }
 
-    if (cudaMemcpy(config[i].vec_a_device, a.data(), float_vec_size[i] * sizeof(float), cudaMemcpyHostToDevice)
-    		!= cudaSuccess
-        || cudaMemcpy(config[i].vec_b_device, b.data(), float_vec_size[i] * sizeof(float), cudaMemcpyHostToDevice)
-                   != cudaSuccess) {
-            throw std::runtime_error("Failed to copy data to device!");
+    if (cudaMemcpy(config.matrix_in_device, a.data(), mem_size * sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess)
+    {
+    	throw std::runtime_error("Failed to copy data to device!");
     }
 
     gpu_execute.begin();
 
-    cuda_vector_add<<<blocks, threads>>>((float *) config[i].vec_a_device, (float *) config[i].vec_b_device,
-                                             config[i].step, float_vec_size[i], config[i].fix_position,
-                                             config[i].fix_step);
+    cuda_vector_add<<<blocks, threads>>>((float *) config.matrix_in_device, (float *) config.matrix_out_device, 
+																						 config.matrix_width, config.step, mem_size, config.fix_position,
+                                             config.fix_step);
 
     if (cudaDeviceSynchronize() != cudaSuccess) {
     	throw std::runtime_error("Sync issue! (Launch failure?)");
@@ -146,16 +150,16 @@ void launch_kernels_and_report(const options_t &opts) {
 
     gpu_execute.end();
 
-    if (cudaMemcpy(c.data(), config[i].vec_a_device, float_vec_size[i] * sizeof(float), cudaMemcpyDeviceToHost)
+    if (cudaMemcpy(c.data(), config.matrix_in_device, mem_size * sizeof(float), cudaMemcpyDeviceToHost)
             != cudaSuccess) {
    		throw std::runtime_error("Could not copy data back!");
     }
 
-    cudaFree(config[i].vec_a_device);
-    cudaFree(config[i].vec_b_device);
+    cudaFree(config.matrix_in_device);
+    cudaFree(config.matrix_out_device);
 		gpu_total.end();
 
-    std::cout << "GPU_" << config[i].device << " time: " << gpu_total.ms_elapsed()	
+    std::cout << "GPU_" << config.device << " time: " << gpu_total.ms_elapsed()	
 
     return;
 }
