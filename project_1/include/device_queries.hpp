@@ -3,6 +3,7 @@
 
 //#include <cuda_runtime_api.h>
 #include <vector>
+#include <cstddef>
 // Functions to query device count and the global memory of a device
 
 // throws if/when cuda dies for obvious reasons
