@@ -68,7 +68,7 @@ void __global__ transpose_shared (float *in, float *out, const unsigned W, unsig
 			unsigned y = 0; //floor( (float) position/ (float)W);
 			unsigned x = 0; //position - (y * W);  
 
-			for (unsigned s = 0; s < step; ++s, position+=step, in+=step) {	
+			for (unsigned s = 0; s < step; ++s, position+=blockDim.x, in+=blockDim.x) {	
 				
 				tile[threadIdx.x] = *in;
 				__syncthreads();
@@ -76,16 +76,17 @@ void __global__ transpose_shared (float *in, float *out, const unsigned W, unsig
         // printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
 				y = floor( (float) position/ (float)W);
 				x = position - (y * W); 
-        //printf ("%u %u %u %u\n", position, x,y,x*W +y);
+        printf ("%u %u %u %u %u\n", position, x,y,x*W +y, threadIdx.x);
 				out[x * W + y] = tile[threadIdx.x];
        
 			}
+			printf("%i %i\n", position, threadIdx.x);
       if (position == fix_position) {
-        		for (unsigned i = fix_step - step; i < fix_step; ++i, ++position, ++in) {
+        		for (unsigned i = 0; i < fix_step; ++i, ++position, ++in) {
             	// printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
 							y = floor( (float) position/ (float)W);
 							x = position - (y * W); 
-            	//printf ("%u %u %u %u\n", position, x,y,x*W +y);
+            	printf ("LEFT OVER: %u %u %u %u\n", position, x,y,x*W +y);
 							out[x * W + y] = *in;
         	}
       }
@@ -135,6 +136,7 @@ void launch_kernels_and_report(const options_t &opts) {
     	throw std::runtime_error("Block/thread count outside device dims!");
     }
     config.step = n_elems / thread_total;
+		const bool offset_needed = (config.step * thread_total) != n_elems;
     if (config.step == 0) {
     	std::cout << "More threads than values! Rude!" << std::endl;
       // with a very low mem utilization (read: testing)
@@ -143,8 +145,9 @@ void launch_kernels_and_report(const options_t &opts) {
       config.step         = 1;
       config.fix_position = UINT_MAX;
       config.fix_step     = 1;
+
     } else {
-    	const bool offset_needed = (config.step * thread_total) != n_elems;
+    	
       if (offset_needed) {
       	config.fix_position = config.step * (thread_total - 1);
         config.fix_step     = config.step + (n_elems - (config.step * thread_total));
@@ -206,16 +209,31 @@ void launch_kernels_and_report(const options_t &opts) {
    		throw std::runtime_error("Could not copy data back!");
     }
 
+		if (cudaMemset(config.matrix_out_device, 0, n_elems * sizeof(float))
+            != cudaSuccess) {
+   		throw std::runtime_error("Could not memset out matrix!");
+    }
+
 		/*
 		* SHARED MEMORY TIMING
 		*/
+		// NEED IN-CASE FOR INTERLEAVING -- IMPORTANTE
+		if (offset_needed) {
+      config.fix_position = config.step * (thread_total);
+      config.fix_step     = (n_elems - (config.step * thread_total));
+		std::cout << "Dev: " << config.device << " Step: " << config.step << " Fix_P: " << config.fix_position
+              << " Fix_s: " << config.fix_step << " Threads: " << thread_total
+              << " Val total: " << n_elems << std::endl;
+    } 
+
 		gpu_execute.begin();
 
     transpose_shared<<<blocks, threads, threads*sizeof(float)>>>((float *) config.matrix_in_device, (float *) config.matrix_out_device, 
 																						 config.matrix_width, config.step, n_elems, config.fix_position,
                                              config.fix_step);
-
+		
     if (cudaDeviceSynchronize() != cudaSuccess) {
+			printf("CUDA ERROR = %s\n", cudaGetErrorString(cudaGetLastError()));
     	throw std::runtime_error("Sync issue! (Launch failure?)");
     }
 
@@ -286,10 +304,10 @@ void launch_kernels_and_report(const options_t &opts) {
 				std::cout << std::endl <<"GPU RESULT" << std::endl;
 				for (unsigned r = 0; r < matrix_n;++r) {
 					for (unsigned x = 0; x < matrix_n; ++x) {
-						std::cout << c[r * matrix_n + x] << " ";
+						std::cout << c_shared[r * matrix_n + x] << " ";
 					}
 					std::cout << std::endl;
-				}	
+				}
 			}
 		}
     return;

@@ -2,7 +2,7 @@
 CC = g++
 NVCC = nvcc
 CFLAGS = -c -Wall -std=c++11 -Iinclude
-CU_CFLAGS = -c -pg -std=c++11 -Iinclude -Xcompiler -Wall
+CU_CFLAGS = -c -pg -std=c++11 -Iinclude -Xcompiler -Wall -g -G
 LDFLAGS = -lboost_program_options
 SOURCES = transpose_main.cpp parameters.cpp shared_utilities.cpp
 # vector_add.cpp
