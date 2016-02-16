@@ -8,17 +8,15 @@
 #include "shared_utilities.hpp"
 #include "timer.hpp"
 
-bool cpu_transpose(const std::vector<float>& in, const std::vector<float>& out, const size_t N, const size_t M) {
-	const float *src = in.data();
-	float *dst = (float*) out.data();
-	if (!src || !dst || N == 0 || M == 0) {
+bool cpu_transpose(const std::vector<float>& in, std::vector<float>& out, const size_t N, const size_t M) {
+	if (in.empty() || N == 0 || M == 0) {
 		return false;
 	}
 
 	for(unsigned n = 0; n<N*M; n++) {
 		const size_t row = n/N;
 		const size_t col = n%N;
-		dst[n] = src[M*col + row];
+		out[n] = in[M*col + row];
 	}
 	return true;
 }
@@ -27,6 +25,7 @@ void __global__ transpose_global (float *in, float *out, const unsigned W, unsig
 		const unsigned total, const unsigned fix_position, unsigned fix_step) {
 
 	  unsigned position = blockDim.x * blockIdx.x + threadIdx.x;
+		//printf("pos = %u\n", position);
     position *= step;
     // printf("%d\t%d\t%d\t%d\n", blockDim.x, blockIdx.x, threadIdx.x, position);
     // This is a really dumb edge case clearly used to break the code, but
@@ -42,14 +41,57 @@ void __global__ transpose_global (float *in, float *out, const unsigned W, unsig
         in += position;
 				unsigned y = 0; //floor( (float) position/ (float)W);
 				unsigned x = 0; //position - (y * W);  
-        for (int i = 0; i < step; ++i, ++position) {
+        for (int i = 0; i < step; ++i, ++position, ++in) {
             // printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
 						y = floor( (float) position/ (float)W);
 						x = position - (y * W); 
-            out[x * W + y] += *in;
+            //printf ("%u %u %u %u\n", position, x,y,x*W +y);
+						out[x * W + y] = *in;
         }
     }
 }
+
+void __global__ transpose_shared (float *in, float *out, const unsigned W, unsigned step, 
+		const unsigned total, const unsigned fix_position, unsigned fix_step) {
+
+		extern __shared__ float tile[];
+
+	  unsigned position = blockDim.x * blockIdx.x + threadIdx.x;
+		//printf("pos = %u\n", position);
+    //position *= step;
+	
+
+    // printf("%d\t%d\t%d\t%d\n", blockDim.x, blockIdx.x, threadIdx.x, position);
+    if (position < total) {
+						// load shared memory
+      in += position;
+			unsigned y = 0; //floor( (float) position/ (float)W);
+			unsigned x = 0; //position - (y * W);  
+
+			for (unsigned s = 0; s < step; ++s, position+=step, in+=step) {	
+				
+				tile[threadIdx.x] = *in;
+				__syncthreads();
+
+        // printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
+				y = floor( (float) position/ (float)W);
+				x = position - (y * W); 
+        //printf ("%u %u %u %u\n", position, x,y,x*W +y);
+				out[x * W + y] = tile[threadIdx.x];
+       
+			}
+      if (position == fix_position) {
+        		for (unsigned i = fix_step - step; i < fix_step; ++i, ++position, ++in) {
+            	// printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
+							y = floor( (float) position/ (float)W);
+							x = position - (y * W); 
+            	//printf ("%u %u %u %u\n", position, x,y,x*W +y);
+							out[x * W + y] = *in;
+        	}
+      }
+
+		}
+} 
 
 using device_config_t = struct {
     int device;
@@ -79,21 +121,20 @@ void launch_kernels_and_report(const options_t &opts) {
 			return;
 		}
 	
-    size_t mem_size = get_global_mem(0) / sizeof(float) * util / 2.0;
-		size_t matrix_n = floor(sqrt((float)mem_size));
-    // number of total floats, get the utilization, div in two because a + b
-    // resulting size is the size for vectors a and b
+    size_t n_elems = get_global_mem(0) / sizeof(float) * util / 2.0; // get the total number of elements
+		size_t matrix_n = floor(sqrt((float)n_elems)); // get the width of the matrix
+		n_elems = matrix_n * matrix_n; // sqaure the values to make it matrix
 
-    // Instead of making a giant contiguous vector and serving out slices to the devices
-    // I'm just going to make smaller ones since there's no real difference
+		std::cout << "N = " << matrix_n << std::endl;
 
     device_config_t config;	
     config.device = 0;
+		config.matrix_width = matrix_n;
     auto dim_pair = get_dims(config.device);
     if (dim_pair.first < threads || dim_pair.second < blocks) {
     	throw std::runtime_error("Block/thread count outside device dims!");
     }
-    config.step = mem_size / thread_total;
+    config.step = n_elems / thread_total;
     if (config.step == 0) {
     	std::cout << "More threads than values! Rude!" << std::endl;
       // with a very low mem utilization (read: testing)
@@ -103,10 +144,10 @@ void launch_kernels_and_report(const options_t &opts) {
       config.fix_position = UINT_MAX;
       config.fix_step     = 1;
     } else {
-    	const bool offset_needed = (config.step * thread_total) != mem_size;
+    	const bool offset_needed = (config.step * thread_total) != n_elems;
       if (offset_needed) {
       	config.fix_position = config.step * (thread_total - 1);
-        config.fix_step     = config.step + (mem_size - (config.step * thread_total));
+        config.fix_step     = config.step + (n_elems - (config.step * thread_total));
       } 
 			else {
                 config.fix_position = UINT_MAX;        // should never trigger
@@ -118,11 +159,13 @@ void launch_kernels_and_report(const options_t &opts) {
 
 		std::cout << "Dev: " << config.device << " Step: " << config.step << " Fix_P: " << config.fix_position
               << " Fix_s: " << config.fix_step << " Threads: " << thread_total
-              << " Val total: " << mem_size << std::endl;
+              << " Val total: " << n_elems << std::endl;
 
-    std::vector<float> in = generate_vector(mem_size);
-   	std::vector<float> out = generate_vector(mem_size);
-    std::vector<float> c = std::vector<float>(mem_size);
+    std::vector<float> in = generate_vector(n_elems);
+   	std::vector<float> out = generate_vector(n_elems);
+    std::vector<float> c = std::vector<float>(n_elems);
+		std::vector<float> c_shared = std::vector<float>(n_elems);
+		
 
     if (cudaSetDevice(config.device) != cudaSuccess) {
     	throw std::runtime_error("could not select device!");
@@ -130,20 +173,24 @@ void launch_kernels_and_report(const options_t &opts) {
 
     gpu_total.begin();
 
-    if (cudaMalloc(&config.matrix_in_device, mem_size * sizeof(float)) != cudaSuccess
-    			|| cudaMalloc(&config.matrix_out_device, mem_size * sizeof(float)) != cudaSuccess) {
+    if (cudaMalloc(&config.matrix_in_device, n_elems * sizeof(float)) != cudaSuccess
+    			|| cudaMalloc(&config.matrix_out_device, n_elems * sizeof(float)) != cudaSuccess) {
     	throw std::runtime_error("Failed to malloc vector!");
     }
 
-    if (cudaMemcpy(config.matrix_in_device, in.data(), mem_size * sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess)
+    if (cudaMemcpy(config.matrix_in_device, in.data(), n_elems * sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess)
     {
     	throw std::runtime_error("Failed to copy data to device!");
     }
 
+
+		/*
+		* GLOBAL MEMORY TIMING
+		*/
     gpu_execute.begin();
 
     transpose_global<<<blocks, threads>>>((float *) config.matrix_in_device, (float *) config.matrix_out_device, 
-																						 config.matrix_width, config.step, mem_size, config.fix_position,
+																						 config.matrix_width, config.step, n_elems, config.fix_position,
                                              config.fix_step);
 
     if (cudaDeviceSynchronize() != cudaSuccess) {
@@ -152,26 +199,98 @@ void launch_kernels_and_report(const options_t &opts) {
 
     gpu_execute.end();
 
-    if (cudaMemcpy(c.data(), config.matrix_in_device, mem_size * sizeof(float), cudaMemcpyDeviceToHost)
+    std::cout << "GLOBAL MEMORY GPU_" << config.device << " time: " << gpu_execute.ms_elapsed() << std::endl;	
+
+    if (cudaMemcpy(c.data(), config.matrix_out_device, n_elems * sizeof(float), cudaMemcpyDeviceToHost)
             != cudaSuccess) {
    		throw std::runtime_error("Could not copy data back!");
     }
+
+		/*
+		* SHARED MEMORY TIMING
+		*/
+		gpu_execute.begin();
+
+    transpose_shared<<<blocks, threads, threads*sizeof(float)>>>((float *) config.matrix_in_device, (float *) config.matrix_out_device, 
+																						 config.matrix_width, config.step, n_elems, config.fix_position,
+                                             config.fix_step);
+
+    if (cudaDeviceSynchronize() != cudaSuccess) {
+    	throw std::runtime_error("Sync issue! (Launch failure?)");
+    }
+
+    gpu_execute.end();
+
+
+    if (cudaMemcpy(c_shared.data(), config.matrix_out_device, n_elems * sizeof(float), cudaMemcpyDeviceToHost)
+            != cudaSuccess) {
+   		throw std::runtime_error("Could not copy data back!");
+    }
+
 
     cudaFree(config.matrix_in_device);
     cudaFree(config.matrix_out_device);
 		gpu_total.end();
 
-    std::cout << "GPU_" << config.device << " time: " << gpu_total.ms_elapsed();	
+    std::cout << "SHARED MEMORY GPU_" << config.device << " time: " << gpu_execute.ms_elapsed() << std::endl;	
 
 		if (validate) {
     	timer cpu_time;
       cpu_time.begin();
-      cpu_transpose(in,out,config.matrix_width,config.matrix_width);
+			std::vector<float> cpu_res = std::vector<float>(n_elems);
+      cpu_transpose(in,cpu_res,config.matrix_width,config.matrix_width);
       cpu_time.end();
       std::cout << "CPU time: " << cpu_time.ms_elapsed() << " ms" << std::endl;
-      if (!check_equal(c, out)) {
-				std::cout << "FAILED LOSER" << std::endl;
+      if (!check_equal(c, cpu_res)) {
+				std::cout << "FAILED LOSER GLOBAL MEMORY" << std::endl;
+				std::cout << "INPUT " << std::endl;
+				for (unsigned r = 0; r < matrix_n;++r) {
+					for (unsigned x = 0; x < matrix_n; ++x) {
+						std::cout << in[r * matrix_n + x] << " ";
+					}
+					std::cout << std::endl;
+				}
+
+				std::cout << std::endl <<"CPU RESULT" << std::endl;
+				for (unsigned r = 0; r < matrix_n;++r) {
+					for (unsigned x = 0; x < matrix_n; ++x) {
+						std::cout << cpu_res[r * matrix_n + x] << " ";
+					}
+					std::cout << std::endl;
+				}
+				std::cout << std::endl <<"GPU RESULT" << std::endl;
+				for (unsigned r = 0; r < matrix_n;++r) {
+					for (unsigned x = 0; x < matrix_n; ++x) {
+						std::cout << c[r * matrix_n + x] << " ";
+					}
+					std::cout << std::endl;
+				}
     	}
+      if (!check_equal(c_shared, cpu_res)) {
+				std::cout << "FAILED LOSER: SHARED MEMORY" << std::endl;
+				std::cout << "INPUT " << std::endl;
+				for (unsigned r = 0; r < matrix_n;++r) {
+					for (unsigned x = 0; x < matrix_n; ++x) {
+						std::cout << in[r * matrix_n + x] << " ";
+					}
+					std::cout << std::endl;
+				}
+
+				std::cout << std::endl <<"CPU RESULT" << std::endl;
+				for (unsigned r = 0; r < matrix_n;++r) {
+					for (unsigned x = 0; x < matrix_n; ++x) {
+						std::cout << cpu_res[r * matrix_n + x] << " ";
+					}
+					std::cout << std::endl;
+				}
+				std::cout << std::endl <<"GPU RESULT" << std::endl;
+				for (unsigned r = 0; r < matrix_n;++r) {
+					for (unsigned x = 0; x < matrix_n; ++x) {
+						std::cout << c[r * matrix_n + x] << " ";
+					}
+					std::cout << std::endl;
+				}	
+			}
 		}
     return;
 }
