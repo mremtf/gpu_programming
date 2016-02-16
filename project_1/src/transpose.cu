@@ -43,7 +43,7 @@ void __global__ transpose_global (float *in, float *out, const unsigned W, unsig
 				unsigned x = 0; //position - (y * W);  
         for (int i = 0; i < step; ++i, ++position, ++in) {
             // printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
-						y = floor( (float) position/ (float)W);
+						y = position / W;
 						x = position - (y * W); 
             //printf ("%u %u %u %u\n", position, x,y,x*W +y);
 						out[x * W + y] = *in;
@@ -74,7 +74,7 @@ void __global__ transpose_shared (float *in, float *out, const unsigned W, unsig
 				__syncthreads();
 
         // printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
-				y = floor( (float) position/ (float)W);
+				y = position/ W;
 				x = position - (y * W); 
         printf ("%u %u %u %u %u\n", position, x,y,x*W +y, threadIdx.x);
 				out[x * W + y] = tile[threadIdx.x];
@@ -84,7 +84,7 @@ void __global__ transpose_shared (float *in, float *out, const unsigned W, unsig
       if (position == fix_position) {
         		for (unsigned i = 0; i < fix_step; ++i, ++position, ++in) {
             	// printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
-							y = floor( (float) position/ (float)W);
+							y = position/ W;
 							x = position - (y * W); 
             	printf ("LEFT OVER: %u %u %u %u\n", position, x,y,x*W +y);
 							out[x * W + y] = *in;
@@ -218,7 +218,7 @@ void launch_kernels_and_report(const options_t &opts) {
 		* SHARED MEMORY TIMING
 		*/
 		// NEED IN-CASE FOR INTERLEAVING -- IMPORTANTE
-		if (offset_needed) {
+		/*if (offset_needed) {
       config.fix_position = config.step * (thread_total);
       config.fix_step     = (n_elems - (config.step * thread_total));
 		std::cout << "Dev: " << config.device << " Step: " << config.step << " Fix_P: " << config.fix_position
@@ -243,14 +243,14 @@ void launch_kernels_and_report(const options_t &opts) {
     if (cudaMemcpy(c_shared.data(), config.matrix_out_device, n_elems * sizeof(float), cudaMemcpyDeviceToHost)
             != cudaSuccess) {
    		throw std::runtime_error("Could not copy data back!");
-    }
+    }*/
 
 
     cudaFree(config.matrix_in_device);
     cudaFree(config.matrix_out_device);
 		gpu_total.end();
 
-    std::cout << "SHARED MEMORY GPU_" << config.device << " time: " << gpu_execute.ms_elapsed() << std::endl;	
+    //std::cout << "SHARED MEMORY GPU_" << config.device << " time: " << gpu_execute.ms_elapsed() << std::endl;	
 
 		if (validate) {
     	timer cpu_time;
@@ -284,7 +284,7 @@ void launch_kernels_and_report(const options_t &opts) {
 					std::cout << std::endl;
 				}
     	}
-      if (!check_equal(c_shared, cpu_res)) {
+      /*if (!check_equal(c_shared, cpu_res)) {
 				std::cout << "FAILED LOSER: SHARED MEMORY" << std::endl;
 				std::cout << "INPUT " << std::endl;
 				for (unsigned r = 0; r < matrix_n;++r) {
@@ -308,7 +308,7 @@ void launch_kernels_and_report(const options_t &opts) {
 					}
 					std::cout << std::endl;
 				}
-			}
+			}*/
 		}
     return;
 }
