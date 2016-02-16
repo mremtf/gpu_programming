@@ -9,4 +9,4 @@ for blk in 32 64 128 256 512 1024; do
     done
   done
 done
-} > vec_time.txt
+} > vec_time.csv
