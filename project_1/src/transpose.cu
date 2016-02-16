@@ -68,25 +68,31 @@ void __global__ transpose_shared (float *in, float *out, const unsigned W, unsig
 			unsigned y = 0; //floor( (float) position/ (float)W);
 			unsigned x = 0; //position - (y * W);  
 
-			for (unsigned s = 0; s < step; ++s, position+=blockDim.x, in+=blockDim.x) {	
+			/*float *ptr = &in[0]; 
+			for (unsigned s = 0; s < step; ++s, ptr+=blockDim.x) {
+				tile[threadIdx.x] = *ptr;	
+			}
+			__syncthreads();*/
+
+			for (unsigned s = 0; s < step; ++s, position+=blockDim.x * gridDim.x, in+=blockDim.x * gridDim.x) {	
 				
 				tile[threadIdx.x] = *in;
-				__syncthreads();
+				//__syncthreads();
 
-        // printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
+         //printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
 				y = position/ W;
 				x = position - (y * W); 
-        printf ("%u %u %u %u %u\n", position, x,y,x*W +y, threadIdx.x);
+        //printf ("%u %u %u %u %u\n", position, x,y,x*W +y, blockIdx.x);
 				out[x * W + y] = tile[threadIdx.x];
        
 			}
-			printf("%i %i\n", position, threadIdx.x);
+			//printf("%i %i\n", position, blockIdx.x);
       if (position == fix_position) {
         		for (unsigned i = 0; i < fix_step; ++i, ++position, ++in) {
             	// printf("%p %p %i %i %f %f\n", a, b, position, i, *a, *b);
 							y = position/ W;
 							x = position - (y * W); 
-            	printf ("LEFT OVER: %u %u %u %u\n", position, x,y,x*W +y);
+            	//printf ("LEFT OVER: %u %u %u %u\n", position, x,y,x*W +y);
 							out[x * W + y] = *in;
         	}
       }
@@ -186,7 +192,16 @@ void launch_kernels_and_report(const options_t &opts) {
     	throw std::runtime_error("Failed to copy data to device!");
     }
 
-
+		/*
+		* WARM THE CARD 
+		*/
+			
+    transpose_global<<<blocks, threads>>>((float *) config.matrix_in_device, (float *) config.matrix_out_device, 
+																						 config.matrix_width, config.step, n_elems, config.fix_position,
+                                             config.fix_step);
+		if (cudaSuccess != cudaGetLastError()) {
+			throw std::runtime_error("WARMING THE CARD FAILED");
+		}
 		/*
 		* GLOBAL MEMORY TIMING
 		*/
@@ -218,7 +233,7 @@ void launch_kernels_and_report(const options_t &opts) {
 		* SHARED MEMORY TIMING
 		*/
 		// NEED IN-CASE FOR INTERLEAVING -- IMPORTANTE
-		/*if (offset_needed) {
+		if (offset_needed) {
       config.fix_position = config.step * (thread_total);
       config.fix_step     = (n_elems - (config.step * thread_total));
 		std::cout << "Dev: " << config.device << " Step: " << config.step << " Fix_P: " << config.fix_position
@@ -238,19 +253,19 @@ void launch_kernels_and_report(const options_t &opts) {
     }
 
     gpu_execute.end();
-
+		
+    std::cout << "SHARED MEMORY GPU_" << config.device << " time: " << gpu_execute.ms_elapsed() << " ms" << std::endl;	
 
     if (cudaMemcpy(c_shared.data(), config.matrix_out_device, n_elems * sizeof(float), cudaMemcpyDeviceToHost)
             != cudaSuccess) {
    		throw std::runtime_error("Could not copy data back!");
-    }*/
+    }
 
 
     cudaFree(config.matrix_in_device);
     cudaFree(config.matrix_out_device);
 		gpu_total.end();
 
-    //std::cout << "SHARED MEMORY GPU_" << config.device << " time: " << gpu_execute.ms_elapsed() << std::endl;	
 
 		if (validate) {
     	timer cpu_time;
@@ -284,31 +299,31 @@ void launch_kernels_and_report(const options_t &opts) {
 					std::cout << std::endl;
 				}
     	}
-      /*if (!check_equal(c_shared, cpu_res)) {
+      if (!check_equal(c_shared, cpu_res)) {
 				std::cout << "FAILED LOSER: SHARED MEMORY" << std::endl;
 				std::cout << "INPUT " << std::endl;
-				for (unsigned r = 0; r < matrix_n;++r) {
-					for (unsigned x = 0; x < matrix_n; ++x) {
-						std::cout << in[r * matrix_n + x] << " ";
+				for (unsigned r = 0; r < 4;++r) {
+					for (unsigned x = 0; x < 4; ++x) {
+						std::cout << in[r * 4 + x] << " ";
 					}
 					std::cout << std::endl;
 				}
 
 				std::cout << std::endl <<"CPU RESULT" << std::endl;
-				for (unsigned r = 0; r < matrix_n;++r) {
-					for (unsigned x = 0; x < matrix_n; ++x) {
-						std::cout << cpu_res[r * matrix_n + x] << " ";
+				for (unsigned r = 0; r < 6;++r) {
+					for (unsigned x = 0; x < 6; ++x) {
+						std::cout << cpu_res[r * 6 + x] << " ";
 					}
 					std::cout << std::endl;
 				}
 				std::cout << std::endl <<"GPU RESULT" << std::endl;
-				for (unsigned r = 0; r < matrix_n;++r) {
-					for (unsigned x = 0; x < matrix_n; ++x) {
-						std::cout << c_shared[r * matrix_n + x] << " ";
+				for (unsigned r = 0; r < 6;++r) {
+					for (unsigned x = 0; x < 6; ++x) {
+						std::cout << c_shared[r * 6 + x] << " ";
 					}
 					std::cout << std::endl;
 				}
-			}*/
+			}
 		}
     return;
 }
