@@ -192,13 +192,6 @@ void launch_kernels_and_report(const options_t &opts) {
     	throw std::runtime_error("Failed to copy data to device!");
     }
 
-		/*
-		* WARM THE CARD 
-		*/
-			
-    transpose_global<<<blocks, threads>>>((float *) config.matrix_in_device, (float *) config.matrix_out_device, 
-																						 config.matrix_width, config.step, n_elems, config.fix_position,
-                                             config.fix_step);
 		if (cudaSuccess != cudaGetLastError()) {
 			throw std::runtime_error("WARMING THE CARD FAILED");
 		}
@@ -265,6 +258,13 @@ void launch_kernels_and_report(const options_t &opts) {
     cudaFree(config.matrix_in_device);
     cudaFree(config.matrix_out_device);
 		gpu_total.end();
+
+		timer cpu_time;
+    cpu_time.begin();
+		std::vector<float> cpu_res = std::vector<float>(n_elems);
+    cpu_transpose(in,cpu_res,config.matrix_width,config.matrix_width);
+    cpu_time.end();
+    std::cout << "CPU time: " << cpu_time.ms_elapsed() << " ms" << std::endl;
 
 
 		if (validate) {
