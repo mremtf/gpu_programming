@@ -1,0 +1,10 @@
+sqrtf(
+expf(
+exp2f(
+exp10f(
+expm1f(
+logf(
+log1pf(
+sinf(
+cosf(
+tanf(
