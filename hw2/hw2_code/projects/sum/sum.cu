@@ -94,7 +94,7 @@ void runTest(int argc, char **argv) {
         // printf(" %f ", h_data[i]);
     }
     // blank out extras
-    for (unsigned int i = num_elements; i < correct_size; ++i){
+    for (unsigned int i = num_elements; i < correct_size; ++i) {
         h_data[i] = 0.0;
     }
     // printf("\n");
@@ -112,7 +112,7 @@ void runTest(int argc, char **argv) {
     // AND I can't just have global id 0 blank it because it might get scheduled weird
     // It's dumb but deal with it.
     const float literal_zero = 0.0f;
-    CUDA_SAFE_CALL(cudaMemcpy(d_odata,&literal_zero,cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(d_odata, &literal_zero, sizeof(float), cudaMemcpyHostToDevice));
 
     CUDA_SAFE_CALL(cudaMemcpy(d_idata, h_data, mem_size, cudaMemcpyHostToDevice));
 

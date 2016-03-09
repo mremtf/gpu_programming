@@ -80,10 +80,10 @@ __global__ void sum_kernel(float *global_out, float *global_in) {
         }
     }
 
-    if (tid = 0) {
+    if (tid == 0) {
         // atomically add our block results to the output float
         // shared -> register -> global surely won't be faster than shared->global
-        atomicAdd(global_out,shared_data[0]);
+        atomicAdd(global_out, shared_data[0]);
     }
 }
 
