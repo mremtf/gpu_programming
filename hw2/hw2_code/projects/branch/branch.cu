@@ -52,6 +52,12 @@
 // function [1 2 3 4 5 6 7 8 9 10]
 
 // BIG DEVICE FUNCTION 
+
+
+__device__ float bigfunction0 () {
+	return (expf(sqrtf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+}
+
 __device__ float bigfunction1(){
 return ( exp2f( cosf( exp10f( log1pf( expm1f( logf( tanf( sqrtf( expf( sinf( float(threadIdx.x))))))))))));
 }
@@ -251,7 +257,7 @@ return (cosf( sinf( expf( expm1f( exp2f( tanf( sqrtf( exp10f( logf( log1pf( floa
 //! @param g_idata  input data in global memory
 //! @param g_odata  output data in global memory
 ////////////////////////////////////////////////////////////////////////////////
-__global__ void
+/*__global__ void
 testKernel( float* g_idata, float* g_odata) 
 {
     float result=1;
@@ -265,11 +271,23 @@ testKernel( float* g_idata, float* g_odata)
     }
 
      g_odata[0] = result;
+}*/
+
+__global__ void
+runNoBranches( float* g_idata, float* g_odata) 
+{
+    float result=1;
+ 
+    // place variety of branch solutions here
+    // make sure you use results, so compiler does not optomize out
+		result = bigfunction0();
+		
+		g_odata[threadIdx.x] = result;
 }
 
 // handles 1 branches in the code
 __global__ void
-runOnesBranches( float* g_idata, float* g_odata) 
+runOneBranches( float* g_idata, float* g_odata) 
 {
     float result=1;
  
@@ -280,6 +298,8 @@ runOnesBranches( float* g_idata, float* g_odata)
     } else {
 			result = bigfunction2();
     }
+
+		g_odata[threadIdx.x] = result;
 }
 
 
@@ -470,13 +490,140 @@ runThirtyTwoBranches( float* g_idata, float* g_odata)
  
     // place variety of branch solutions here
     // make sure you use results, so compiler does not optomize out
-    if (threadIdx.x < 128) {
-	result = bigfunctiona();
-    } else {
-	result = bigfunctionb();
-    }
+    switch(threadIdx.x) {
+			case 0:
+				result = bigfunction1();
+			break;
 
-     g_odata[0] = result;
+    	case 1:
+				result = bigfunction2();
+    	break;
+
+    	case 2:
+				result = bigfunction3();
+    	break;
+
+    	case 3:
+				result = bigfunction4();
+    	break;
+
+    	case 4:
+				result = bigfunction5();
+    	break;
+
+    	case 5:
+				result = bigfunction6();
+    	break;
+
+			case 6:
+				result = bigfunction7();
+    	break;
+
+			case 7:
+				result = bigfunction8();
+    	break;
+
+			case 8:
+				result = bigfunction9();
+			break;
+
+    	case 9:
+				result = bigfunction10();
+    	break;
+
+    	case 10:
+				result = bigfunction11();
+    	break;
+
+    	case 11:
+				result = bigfunction12();
+    	break;
+
+    	case 12:
+				result = bigfunction13();
+    	break;
+
+    	case 13:
+				result = bigfunction14();
+    	break;
+
+			case 14:
+				result = bigfunction15();
+    	break;
+
+			case 15:
+				result = bigfunction16();
+    	break;
+
+			case 16:
+				result = bigfunction17();
+			break;
+
+    	case 17:
+				result = bigfunction18();
+    	break;
+
+    	case 18:
+				result = bigfunction19();
+    	break;
+
+    	case 19:
+				result = bigfunction20();
+    	break;
+
+    	case 20:
+				result = bigfunction21();
+    	break;
+
+    	case 21:
+				result = bigfunction22();
+    	break;
+
+			case 22:
+				result = bigfunction23();
+    	break;
+
+			case 23:
+				result = bigfunction24();
+    	break;
+
+			case 24:
+				result = bigfunction25();
+			break;
+
+    	case 25:
+				result = bigfunction26();
+    	break;
+
+    	case 26:
+				result = bigfunction27();
+    	break;
+
+    	case 27:
+				result = bigfunction28();
+    	break;
+
+    	case 28:
+				result = bigfunction29();
+    	break;
+
+    	case 29:
+				result = bigfunction30();
+    	break;
+
+			case 30:
+				result = bigfunction31();
+    	break;
+
+			case 31:
+				result = bigfunction32();
+    	break;
+
+			default:
+				result = bigfunction33();
+		}
+
+		g_odata[threadIdx.x] = result;
 }
 // Handles 64 branches of the code
 __global__ void
@@ -486,13 +633,268 @@ runSixtyFourBranches( float* g_idata, float* g_odata)
  
     // place variety of branch solutions here
     // make sure you use results, so compiler does not optomize out
-    if (threadIdx.x < 128) {
-	result = bigfunctiona();
-    } else {
-	result = bigfunctionb();
-    }
+    switch(threadIdx.x) {
+			case 0:
+				result = bigfunction1();
+			break;
 
-     g_odata[0] = result;
+    	case 1:
+				result = bigfunction2();
+    	break;
+
+    	case 2:
+				result = bigfunction3();
+    	break;
+
+    	case 3:
+				result = bigfunction4();
+    	break;
+
+    	case 4:
+				result = bigfunction5();
+    	break;
+
+    	case 5:
+				result = bigfunction6();
+    	break;
+
+			case 6:
+				result = bigfunction7();
+    	break;
+
+			case 7:
+				result = bigfunction8();
+    	break;
+
+			case 8:
+				result = bigfunction9();
+			break;
+
+    	case 9:
+				result = bigfunction10();
+    	break;
+
+    	case 10:
+				result = bigfunction11();
+    	break;
+
+    	case 11:
+				result = bigfunction12();
+    	break;
+
+    	case 12:
+				result = bigfunction13();
+    	break;
+
+    	case 13:
+				result = bigfunction14();
+    	break;
+
+			case 14:
+				result = bigfunction15();
+    	break;
+
+			case 15:
+				result = bigfunction16();
+    	break;
+
+			case 16:
+				result = bigfunction17();
+			break;
+
+    	case 17:
+				result = bigfunction18();
+    	break;
+
+    	case 18:
+				result = bigfunction19();
+    	break;
+
+    	case 19:
+				result = bigfunction20();
+    	break;
+
+    	case 20:
+				result = bigfunction21();
+    	break;
+
+    	case 21:
+				result = bigfunction22();
+    	break;
+
+			case 22:
+				result = bigfunction23();
+    	break;
+
+			case 23:
+				result = bigfunction24();
+    	break;
+
+			case 24:
+				result = bigfunction25();
+			break;
+
+    	case 25:
+				result = bigfunction26();
+    	break;
+
+    	case 26:
+				result = bigfunction27();
+    	break;
+
+    	case 27:
+				result = bigfunction28();
+    	break;
+
+    	case 28:
+				result = bigfunction29();
+    	break;
+
+    	case 29:
+				result = bigfunction30();
+    	break;
+
+			case 30:
+				result = bigfunction31();
+    	break;
+
+			case 31:
+				result = bigfunction32();
+    	break;
+
+			case 32:
+				result = bigfunction33();
+			break;
+
+    	case 33:
+				result = bigfunction34();
+    	break;
+
+    	case 34:
+				result = bigfunction35();
+    	break;
+
+    	case 35:
+				result = bigfunction36();
+    	break;
+
+    	case 36:
+				result = bigfunction37();
+    	break;
+
+    	case 37:
+				result = bigfunction38();
+    	break;
+
+			case 38:
+				result = bigfunction39();
+    	break;
+
+			case 39:
+				result = bigfunction40();
+    	break;
+
+			case 40:
+				result = bigfunction41();
+			break;
+
+    	case 41:
+				result = bigfunction42();
+    	break;
+
+    	case 42:
+				result = bigfunction43();
+    	break;
+
+    	case 43:
+				result = bigfunction44();
+    	break;
+
+    	case 44:
+				result = bigfunction45();
+    	break;
+
+    	case 45:
+				result = bigfunction46();
+    	break;
+
+			case 46:
+				result = bigfunction47();
+    	break;
+
+			case 47:
+				result = bigfunction48();
+    	break;
+
+			case 48:
+				result = bigfunction49();
+			break;
+
+    	case 49:
+				result = bigfunction50();
+    	break;
+
+    	case 50:
+				result = bigfunction51();
+    	break;
+
+    	case 51:
+				result = bigfunction52();
+    	break;
+
+    	case 52:
+				result = bigfunction53();
+    	break;
+
+    	case 53:
+				result = bigfunction54();
+    	break;
+
+			case 54:
+				result = bigfunction55();
+    	break;
+
+			case 55:
+				result = bigfunction56();
+    	break;
+
+			case 56:
+				result = bigfunction57();
+			break;
+
+    	case 57:
+				result = bigfunction58();
+    	break;
+
+    	case 58:
+				result = bigfunction58();
+    	break;
+
+    	case 59:
+				result = bigfunction60();
+    	break;
+
+    	case 60:
+				result = bigfunction61();
+    	break;
+
+    	case 61:
+				result = bigfunction62();
+    	break;
+
+			case 62:
+				result = bigfunction63();
+    	break;
+
+			case 63:
+				result = bigfunction64();
+    	break;
+
+			default:
+				result = bigfunction0();
+		}
+
+		g_odata[threadIdx.x] = result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -508,6 +910,7 @@ main( int argc, char** argv)
     runTest( argc, argv);
 
     CUT_EXIT(argc, argv);
+		return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -520,13 +923,14 @@ runTest( int argc, char** argv)
     CUT_DEVICE_INIT();
 
 		int num_branches = atoi(argv[1]);
+		unsigned int num_threads = atoi(argv[2]);
 
     unsigned int timer = 0;
     CUT_SAFE_CALL( cutCreateTimer( &timer));
     CUT_SAFE_CALL( cutStartTimer( timer));
 
     // adjust number of threads here
-    unsigned int num_threads = 256;
+    //unsigned int num_threads = 256;
     unsigned int mem_size = sizeof( float) * num_threads;
 
     // allocate host memory
@@ -553,13 +957,13 @@ runTest( int argc, char** argv)
     dim3  grid( 1, 1, 1);
     dim3  threads( num_threads, 1, 1);
 
-    // execute the kernel
+    // execute the selected kernel
 		switch (num_branches) {
 			case 1:
     		runOneBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
 			break;
 			case 2:
-    		runTwoBranchestest<<< grid, threads, mem_size >>>( d_idata, d_odata);
+    		runTwoBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
 			break;
 			case 4:
     		runFourBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
@@ -600,68 +1004,3 @@ runTest( int argc, char** argv)
     CUDA_SAFE_CALL(cudaFree(d_idata));
     CUDA_SAFE_CALL(cudaFree(d_odata));
 }
-
-/*logf( sqrtf( log1pf( tanf( expm1f( exp2f( cosf( expf( sinf( exp10f( 
-exp10f( expm1f( log1pf( logf( exp2f( expf( sqrtf( cosf( sinf( tanf( 
-expm1f( expf( sinf( exp10f( exp2f( cosf( sqrtf( logf( tanf( log1pf( 
-sqrtf( sinf( exp2f( tanf( logf( log1pf( expm1f( expf( exp10f( cosf( 
-expf( tanf( sqrtf( logf( exp2f( exp10f( cosf( expm1f( log1pf( sinf( 
-tanf( exp2f( sinf( logf( expm1f( exp10f( cosf( sqrtf( log1pf( expf( 
-expm1f( expf( cosf( logf( exp10f( tanf( sinf( sqrtf( log1pf( exp2f( 
-exp2f( cosf( exp10f( sinf( sqrtf( expf( logf( log1pf( expm1f( tanf( 
-logf( sinf( tanf( expf( sqrtf( exp2f( cosf( log1pf( expm1f( exp10f( 
-sqrtf( exp2f( expm1f( cosf( logf( log1pf( tanf( expf( exp10f( sinf( 
-exp10f( sqrtf( tanf( cosf( expf( logf( exp2f( log1pf( sinf( expm1f( 
-logf( tanf( sinf( sqrtf( log1pf( expm1f( exp2f( cosf( expf( exp10f( 
-sinf( sqrtf( log1pf( tanf( logf( cosf( exp2f( expm1f( expf( exp10f( 
-log1pf( tanf( sqrtf( expm1f( exp2f( exp10f( logf( sinf( cosf( expf( 
-sqrtf( exp2f( expm1f( logf( sinf( cosf( exp10f( expf( tanf( log1pf( 
-exp2f( expm1f( sqrtf( cosf( logf( expf( sinf( tanf( exp10f( log1pf( 
-sinf( sqrtf( log1pf( expf( expm1f( logf( tanf( exp2f( cosf( exp10f( 
-logf( sinf( tanf( expf( cosf( exp2f( log1pf( sqrtf( expm1f( exp10f( 
-logf( cosf( sqrtf( log1pf( expm1f( expf( sinf( exp2f( exp10f( tanf( 
-expm1f( exp2f( log1pf( exp10f( logf( cosf( tanf( sqrtf( sinf( expf( 
-sinf( cosf( tanf( exp2f( sqrtf( expm1f( exp10f( logf( expf( log1pf( 
-log1pf( sqrtf( cosf( tanf( sinf( exp10f( expf( expm1f( exp2f( logf( 
-log1pf( logf( exp10f( expm1f( tanf( expf( sqrtf( sinf( cosf( exp2f( 
-exp2f( tanf( expf( cosf( expm1f( logf( sinf( sqrtf( log1pf( exp10f( 
-expf( sinf( sqrtf( log1pf( expm1f( exp10f( tanf( logf( exp2f( cosf( 
-expm1f( log1pf( expf( cosf( sqrtf( exp10f( logf( exp2f( tanf( sinf( 
-log1pf( expf( expm1f( exp2f( sqrtf( tanf( sinf( exp10f( cosf( logf( 
-expf( sinf( tanf( log1pf( logf( expm1f( exp2f( sqrtf( cosf( exp10f( 
-sqrtf( tanf( log1pf( expf( expm1f( logf( cosf( exp10f( sinf( exp2f( 
-expf( sinf( expm1f( sqrtf( tanf( log1pf( logf( cosf( exp10f( exp2f( 
-cosf( exp10f( logf( expm1f( log1pf( sinf( tanf( sqrtf( exp2f( expf( 
-expf( cosf( logf( log1pf( sinf( sqrtf( expm1f( exp10f( tanf( exp2f( 
-exp2f( tanf( logf( sqrtf( cosf( sinf( expf( expm1f( log1pf( exp10f( 
-expf( sinf( log1pf( tanf( exp10f( expm1f( sqrtf( logf( exp2f( cosf( 
-log1pf( exp10f( sinf( expf( exp2f( tanf( logf( expm1f( sqrtf( cosf( 
-expm1f( exp10f( sqrtf( tanf( expf( log1pf( exp2f( logf( sinf( cosf( 
-sinf( sqrtf( exp10f( cosf( exp2f( expm1f( expf( tanf( log1pf( logf( 
-exp2f( cosf( sinf( tanf( logf( expf( exp10f( sqrtf( log1pf( expm1f( 
-log1pf( cosf( exp10f( sqrtf( exp2f( expf( sinf( tanf( logf( expm1f( 
-expm1f( sqrtf( log1pf( logf( exp10f( sinf( expf( cosf( exp2f( tanf( 
-tanf( expf( exp2f( logf( sqrtf( exp10f( cosf( log1pf( expm1f( sinf( 
-exp2f( sinf( tanf( expf( sqrtf( log1pf( exp10f( logf( expm1f( cosf( 
-sqrtf( logf( sinf( cosf( exp10f( exp2f( tanf( expf( expm1f( log1pf( 
-log1pf( tanf( expf( exp2f( sinf( logf( expm1f( sqrtf( exp10f( cosf( 
-sinf( cosf( sqrtf( expf( logf( log1pf( tanf( exp10f( expm1f( exp2f( 
-exp10f( sqrtf( logf( expf( expm1f( sinf( cosf( tanf( exp2f( log1pf( 
-expm1f( expf( exp10f( sqrtf( cosf( exp2f( log1pf( tanf( logf( sinf( 
-exp2f( sqrtf( cosf( tanf( expf( log1pf( exp10f( sinf( expm1f( logf( 
-expm1f( exp2f( exp10f( cosf( tanf( sinf( sqrtf( logf( expf( log1pf( 
-expm1f( exp10f( sqrtf( cosf( exp2f( log1pf( tanf( logf( sinf( expf( 
-cosf( exp10f( logf( sinf( expf( expm1f( tanf( log1pf( exp2f( sqrtf( 
-cosf( tanf( sinf( sqrtf( exp2f( logf( exp10f( expf( log1pf( expm1f( 
-exp10f( sinf( expm1f( expf( logf( tanf( cosf( log1pf( sqrtf( exp2f( 
-logf( tanf( log1pf( exp10f( expf( sinf( expm1f( sqrtf( cosf( exp2f( 
-cosf( sqrtf( sinf( expm1f( expf( exp2f( log1pf( tanf( exp10f( logf( 
-sinf( expf( exp10f( log1pf( exp2f( logf( tanf( expm1f( sqrtf( cosf( 
-expf( logf( exp2f( sqrtf( sinf( cosf( expm1f( tanf( log1pf( exp10f( 
-sqrtf( exp10f( exp2f( log1pf( sinf( cosf( logf( expf( tanf( expm1f( 
-expf( sqrtf( cosf( expm1f( sinf( log1pf( exp2f( tanf( exp10f( logf( 
-exp2f( log1pf( sinf( expm1f( sqrtf( logf( cosf( tanf( exp10f( expf( 
-sqrtf( sinf( logf( expf( exp10f( tanf( log1pf( exp2f( expm1f( cosf( 
-sinf( cosf( exp2f( expm1f( exp10f( expf( logf( log1pf( sqrtf( tanf( 
-expf( sqrtf( exp10f( expm1f( tanf( sinf( logf( exp2f( log1pf( cosf( 
-sinf( sqrtf( tanf( expm1f( expf( cosf( log1pf( exp10f( exp2f( logf(*/ 
