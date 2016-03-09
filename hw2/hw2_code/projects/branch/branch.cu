@@ -50,160 +50,202 @@
 // includes, kernels
 //#include <test1_kernel.cu>
 // function [1 2 3 4 5 6 7 8 9 10]
-__device__ float bigfunction1()
-{
-return (expf(sqrtf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+
+// BIG DEVICE FUNCTION 
+__device__ float bigfunction1(){
+return ( exp2f( cosf( exp10f( log1pf( expm1f( logf( tanf( sqrtf( expf( sinf( float(threadIdx.x))))))))))));
 }
-//function 2 [2 1 3 4 5 6 7 8 9 10]
-__device__ float bigfunction2()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction2(){
+return (sinf( logf( cosf( log1pf( exp2f( tanf( exp10f( expf( sqrtf( expm1f( float(threadIdx.x))))))))))));
 }
-// function 3
-__device__ float bigfunction3()
-{
-return (expf(sqrtf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction3(){
+return (exp2f( exp10f( expf( logf( cosf( log1pf( sinf( sqrtf( expm1f( tanf( float(threadIdx.x))))))))))));
 }
-// function 4
-__device__ float bigfunction4()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction4(){
+return (exp10f( expm1f( exp2f( sinf( tanf( cosf( expf( sqrtf( log1pf( logf( float(threadIdx.x))))))))))));
 }
-// function 5
-__device__ float bigfunction5()
-{
-return (expf(sqrtf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction5(){
+return (sqrtf( log1pf( logf( cosf( expf( sinf( exp10f( expm1f( tanf( exp2f( float(threadIdx.x))))))))))));
 }
-// function 6
-__device__ float bigfunction6()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction6(){
+return (sinf( expf( sqrtf( expm1f( exp10f( cosf( logf( log1pf( tanf( exp2f( float(threadIdx.x))))))))))));
 }
-// function 7
-__device__ float bigfunction7()
-{
-return (expf(sqrtf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction7(){
+return (logf( exp2f( exp10f( expm1f( expf( cosf( log1pf( sqrtf( sinf( tanf( float(threadIdx.x))))))))))));
 }
-// function 8
-__device__ float bigfunction8()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction8(){
+return (sinf( log1pf( exp2f( expf( logf( tanf( expm1f( sqrtf( exp10f( cosf( float(threadIdx.x))))))))))));
 }
-// function 9
-__device__ float bigfunction9()
-{
-return (expf(sqrtf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction9(){
+return (logf( tanf( sinf( exp2f( log1pf( cosf( exp10f( sqrtf( expm1f( expf( float(threadIdx.x))))))))))));
 }
-// function 10
-__device__ float bigfunction10()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction10(){
+return (expf( cosf( exp2f( exp10f( expm1f( sinf( log1pf( tanf( logf( sqrtf( float(threadIdx.x))))))))))));
 }
-// function 11
-__device__ float bigfunction11()
-{
-return (expf(sqrtf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction11(){
+return (exp2f( logf( expf( sqrtf( sinf( expm1f( cosf( tanf( exp10f( log1pf( float(threadIdx.x))))))))))));
 }
-// function 12
-__device__ float bigfunction12()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction12(){
+return (logf( cosf( exp2f( expm1f( sinf( exp10f( expf( log1pf( tanf( sqrtf( float(threadIdx.x))))))))))));
 }
-// function 13
-__device__ float bigfunction13()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction13(){
+return (sqrtf( logf( exp10f( expm1f( exp2f( tanf( log1pf( sinf( expf( cosf( float(threadIdx.x))))))))))));
 }
-// function 14
-__device__ float bigfunction14()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction14(){
+return (log1pf( tanf( sinf( expm1f( logf( exp10f( cosf( exp2f( sqrtf( expf( float(threadIdx.x))))))))))));
 }
-// function 16
-__device__ float bigfunction15()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction15(){
+return (sinf( tanf( logf( exp2f( cosf( expf( exp10f( sqrtf( log1pf( expm1f( float(threadIdx.x))))))))))));
 }
-// function 17
-__device__ float bigfunction16()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction16(){
+return (cosf( exp2f( expm1f( sqrtf( expf( exp10f( tanf( sinf( logf( log1pf( float(threadIdx.x))))))))))));
 }
-// function 18
-__device__ float bigfunction17()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction17(){
+return (cosf( tanf( log1pf( expf( exp10f( exp2f( sinf( sqrtf( logf( expm1f( float(threadIdx.x))))))))))));
 }
-// function 19
-__device__ float bigfunction18()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction18(){
+return (sqrtf( sinf( expm1f( tanf( log1pf( cosf( expf( exp2f( exp10f( logf( float(threadIdx.x))))))))))));
 }
-// function 20
-__device__ float bigfunction()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction19(){
+return (cosf( tanf( exp10f( exp2f( expf( expm1f( sinf( logf( log1pf( sqrtf( float(threadIdx.x))))))))))));
 }
-// function 21
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction20(){
+return (sinf( exp2f( logf( expf( sqrtf( tanf( exp10f( expm1f( log1pf( cosf( float(threadIdx.x))))))))))));
 }
-// function 22
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction21(){
+return (expf( log1pf( sinf( tanf( cosf( logf( sqrtf( expm1f( exp10f( exp2f( float(threadIdx.x))))))))))));
 }
-// function 23
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction22(){
+return (expf( tanf( sqrtf( exp10f( exp2f( expm1f( sinf( logf( log1pf( cosf( float(threadIdx.x))))))))))));
 }
-// function 24
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction23(){
+return (exp10f( sinf( tanf( log1pf( cosf( sqrtf( exp2f( logf( expm1f( expf( float(threadIdx.x))))))))))));
 }
-// function 25
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction24(){
+return (logf( exp2f( expf( cosf( sinf( expm1f( sqrtf( log1pf( tanf( exp10f( float(threadIdx.x))))))))))));
 }
-// function 26
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction25(){
+return (expf( exp2f( expm1f( exp10f( log1pf( logf( tanf( sinf( cosf( sqrtf( float(threadIdx.x))))))))))));
 }
-// function 27
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction26(){
+return (expf( cosf( sqrtf( tanf( exp10f( sinf( log1pf( logf( expm1f( exp2f( float(threadIdx.x))))))))))));
 }
-// function 28
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction27(){
+return (
+exp2f( expf( log1pf( expm1f( exp10f( cosf( logf( sqrtf( sinf( tanf( float(threadIdx.x))))))))))));
 }
-// function 29
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction28(){
+return (sinf( expf( expm1f( tanf( sqrtf( exp2f( cosf( log1pf( logf( exp10f( float(threadIdx.x))))))))))));
 }
-// function 30
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction29(){
+return (exp10f( expf( logf( expm1f( log1pf( sqrtf( sinf( cosf( tanf( exp2f( float(threadIdx.x))))))))))));
 }
-// function 31
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction30(){
+return (exp2f( cosf( expm1f( exp10f( sqrtf( log1pf( expf( sinf( tanf( logf( float(threadIdx.x))))))))))));
 }
-// function 32
-__device__ float bigfunctionb()
-{
-return (sqrtf(expf(exp2f(exp10f(expm1f(logf(log1pf(sinf(cosf(tanf(float(threadIdx.x))))))))))));
+__device__ float bigfunction31(){
+return (sqrtf( expm1f( exp10f( expf( cosf( tanf( exp2f( sinf( log1pf( logf( float(threadIdx.x))))))))))));
 }
+__device__ float bigfunction32(){
+return (log1pf( expf( logf( sqrtf( exp2f( tanf( sinf( cosf( exp10f( expm1f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction33(){
+return (exp2f( logf( sqrtf( expf( exp10f( tanf( cosf( log1pf( expm1f( sinf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction34(){
+return (sqrtf( log1pf( exp2f( expm1f( sinf( cosf( logf( tanf( exp10f( expf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction35(){
+return (log1pf( sqrtf( exp2f( logf( expm1f( cosf( sinf( tanf( expf( exp10f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction36(){
+return (log1pf( exp2f( exp10f( sinf( tanf( sqrtf( logf( expf( expm1f( cosf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction37(){
+return (expm1f( expf( cosf( exp2f( tanf( log1pf( exp10f( logf( sqrtf( sinf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction38(){
+return (exp2f( logf( expf( expm1f( exp10f( log1pf( tanf( cosf( sinf( sqrtf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction39(){
+return (exp2f( log1pf( sqrtf( expf( logf( sinf( exp10f( cosf( expm1f( tanf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction40(){
+return (exp2f( log1pf( sqrtf( cosf( sinf( expm1f( tanf( logf( exp10f( expf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction41(){
+return (exp2f( expm1f( sinf( cosf( tanf( logf( expf( sqrtf( exp10f( log1pf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction42(){
+return (exp10f( sqrtf( sinf( cosf( log1pf( logf( expf( expm1f( tanf( exp2f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction43(){
+return (sinf( expf( exp2f( logf( tanf( log1pf( expm1f( sqrtf( exp10f( cosf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction44(){
+return (log1pf( sqrtf( tanf( exp2f( sinf( exp10f( expf( logf( expm1f( cosf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction45(){
+return (log1pf( cosf( tanf( sinf( logf( exp10f( expm1f( expf( sqrtf( exp2f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction46(){
+return (tanf( log1pf( cosf( expf( logf( exp10f( expm1f( exp2f( sinf( sqrtf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction47(){
+return (expf( sinf( cosf( exp2f( expm1f( log1pf( exp10f( sqrtf( logf( tanf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction48(){
+return (expf( exp10f( sqrtf( logf( expm1f( sinf( exp2f( cosf( log1pf( tanf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction49(){
+return (cosf( exp10f( logf( expm1f( expf( sqrtf( tanf( log1pf( sinf( exp2f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction50(){
+return (log1pf( expm1f( exp10f( sinf( exp2f( expf( cosf( logf( sqrtf( tanf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction51(){
+return (exp2f( sqrtf( logf( cosf( log1pf( expf( exp10f( expm1f( sinf( tanf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction52(){
+return (tanf( expm1f( logf( sqrtf( expf( sinf( cosf( log1pf( exp10f( exp2f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction53(){
+return (cosf( sinf( expf( expm1f( log1pf( exp2f( tanf( logf( exp10f( sqrtf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction54(){
+return (log1pf( sqrtf( expf( sinf( exp2f( cosf( logf( expm1f( tanf( exp10f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction55(){
+return (sinf( sqrtf( cosf( exp2f( tanf( logf( log1pf( expf( exp10f( expm1f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction56(){
+return (cosf( sinf( exp10f( sqrtf( expf( tanf( exp2f( log1pf( logf( expm1f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction57(){
+return (cosf( logf( exp10f( sqrtf( expm1f( log1pf( tanf( exp2f( expf( sinf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction58(){
+return (sqrtf( log1pf( exp10f( cosf( expm1f( sinf( exp2f( logf( expf( tanf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction59(){
+return (log1pf( expm1f( tanf( logf( expf( exp10f( exp2f( sinf( cosf( sqrtf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction60(){
+return (expm1f( expf( cosf( log1pf( logf( exp10f( tanf( sinf( exp2f( sqrtf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction61(){
+return (expm1f( expf( sqrtf( sinf( exp2f( logf( exp10f( cosf( log1pf( tanf( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction62(){
+return (logf( exp2f( sinf( tanf( cosf( log1pf( sqrtf( expf( expm1f( exp10f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction63(){
+return (sinf( tanf( exp10f( expf( cosf( logf( log1pf( exp2f( sqrtf( expm1f( float(threadIdx.x))))))))))));
+}
+__device__ float bigfunction64(){
+return (cosf( sinf( expf( expm1f( exp2f( tanf( sqrtf( exp10f( logf( log1pf( float(threadIdx.x))))))))))));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //! Simple test kernel template for flops test
 //! @param g_idata  input data in global memory
@@ -225,6 +267,75 @@ testKernel( float* g_idata, float* g_odata)
      g_odata[0] = result;
 }
 
+// handles 1 branches in the code
+__global__ void
+runOnesBranches( float* g_idata, float* g_odata) 
+{
+    float result=1;
+ 
+    // place variety of branch solutions here
+    // make sure you use results, so compiler does not optomize out
+    if (threadIdx.x == 0) {
+			result = bigfunction1();
+    } else {
+			result = bigfunction2();
+    }
+}
+
+
+// handles 2 branches in the code
+__global__ void
+runTwoBranches( float* g_idata, float* g_odata) 
+{
+    float result=1;
+ 
+    // place variety of branch solutions here
+    // make sure you use results, so compiler does not optomize out
+    switch(threadIdx.x) {
+			case 0:
+				result = bigfunction1();
+			break;
+    	case 1:
+				result = bigfunction2();
+    	break;
+
+			default:
+				result = bigfunction3();
+		}
+
+		g_odata[threadIdx.x] = result;
+}
+
+// handles 4 branches in the code
+__global__ void
+runFourBranches( float* g_idata, float* g_odata) 
+{
+    float result=1;
+ 
+    // place variety of branch solutions here
+    // make sure you use results, so compiler does not optomize out
+    switch(threadIdx.x) {
+			case 0:
+				result = bigfunction1();
+			break;
+
+    	case 1:
+				result = bigfunction2();
+    	break;
+
+    	case 2:
+				result = bigfunction2();
+    	break;
+
+			default:
+				result = bigfunction3();
+		}
+
+		g_odata[threadIdx.x] = result;
+
+}
+
+
 // handles 8 branches in the code
 __global__ void
 runEightBranches( float* g_idata, float* g_odata) 
@@ -233,13 +344,44 @@ runEightBranches( float* g_idata, float* g_odata)
  
     // place variety of branch solutions here
     // make sure you use results, so compiler does not optomize out
-    if (threadIdx.x < 128) {
-	result = bigfunctiona();
-    } else {
-	result = bigfunctionb();
-    }
+    switch(threadIdx.x) {
+			case 0:
+				result = bigfunction1();
+			break;
 
-     g_odata[0] = result;
+    	case 1:
+				result = bigfunction2();
+    	break;
+
+    	case 2:
+				result = bigfunction3();
+    	break;
+
+    	case 3:
+				result = bigfunction4();
+    	break;
+
+    	case 4:
+				result = bigfunction5();
+    	break;
+
+    	case 5:
+				result = bigfunction6();
+    	break;
+
+			case 6:
+				result = bigfunction7();
+    	break;
+
+			case 7:
+				result = bigfunction8();
+    	break;
+
+			default:
+				result = bigfunction9();
+		}
+
+		g_odata[threadIdx.x] = result;
 }
 // handles 16 branches in the code
 __global__ void
@@ -249,13 +391,76 @@ runSixteenBranches( float* g_idata, float* g_odata)
  
     // place variety of branch solutions here
     // make sure you use results, so compiler does not optomize out
-    if (threadIdx.x < 128) {
-	result = bigfunctiona();
-    } else {
-	result = bigfunctionb();
-    }
+    switch(threadIdx.x) {
+			case 0:
+				result = bigfunction1();
+			break;
 
-     g_odata[0] = result;
+    	case 1:
+				result = bigfunction2();
+    	break;
+
+    	case 2:
+				result = bigfunction3();
+    	break;
+
+    	case 3:
+				result = bigfunction4();
+    	break;
+
+    	case 4:
+				result = bigfunction5();
+    	break;
+
+    	case 5:
+				result = bigfunction6();
+    	break;
+
+			case 6:
+				result = bigfunction7();
+    	break;
+
+			case 7:
+				result = bigfunction8();
+    	break;
+
+			case 8:
+				result = bigfunction9();
+			break;
+
+    	case 9:
+				result = bigfunction10();
+    	break;
+
+    	case 10:
+				result = bigfunction11();
+    	break;
+
+    	case 11:
+				result = bigfunction12();
+    	break;
+
+    	case 12:
+				result = bigfunction13();
+    	break;
+
+    	case 13:
+				result = bigfunction14();
+    	break;
+
+			case 14:
+				result = bigfunction15();
+    	break;
+
+			case 15:
+				result = bigfunction16();
+    	break;
+
+			default:
+				result = bigfunction17();
+		}
+
+		g_odata[threadIdx.x] = result;
 }
 // handles 32 branches in the code
 __global__ void
@@ -314,6 +519,8 @@ runTest( int argc, char** argv)
 
     CUT_DEVICE_INIT();
 
+		int num_branches = atoi(argv[1]);
+
     unsigned int timer = 0;
     CUT_SAFE_CALL( cutCreateTimer( &timer));
     CUT_SAFE_CALL( cutStartTimer( timer));
@@ -347,7 +554,32 @@ runTest( int argc, char** argv)
     dim3  threads( num_threads, 1, 1);
 
     // execute the kernel
-    testKernel<<< grid, threads, mem_size >>>( d_idata, d_odata);
+		switch (num_branches) {
+			case 1:
+    		runOneBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
+			break;
+			case 2:
+    		runTwoBranchestest<<< grid, threads, mem_size >>>( d_idata, d_odata);
+			break;
+			case 4:
+    		runFourBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
+			break;
+			case 8:
+    		runEightBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
+			break;
+			case 16:
+    		runSixteenBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
+			break;
+			case 32:
+    		runThirtyTwoBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
+			break;
+			case 64:
+    		runSixtyFourBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
+			break;
+			default:
+    		runNoBranches<<< grid, threads, mem_size >>>( d_idata, d_odata);
+			break;
+		}
 
     // check if kernel execution generated and error
     CUT_CHECK_ERROR("Kernel execution failed");
