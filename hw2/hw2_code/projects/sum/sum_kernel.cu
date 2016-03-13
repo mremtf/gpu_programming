@@ -45,20 +45,52 @@
 //! @param g_idata  input data in global memory
 //! @param n        input number of elements to scan from input data
 ///////////////////////////////////////////////////////////////////////////////
-__global__ void sum_kernel(float *g_odata, float *g_idata, int n) {
+/*
+No. This is gross, and I can't guarentee it'll work everywhere all the time.
+Something just feels WRONG about this idea and I can't put my finger on it.
+Thanfully, thought of load level and now I can go back to my nice reduction
+
+__global__ void sum_kernel(float *result, float *data, const unsigned n, const unsigned step,
+                           const unsigned fix_position, const unsigned fix_step) {
     extern __shared__ float sdata[];
 
-    const unsigned int tid = threadIdx.x;
+    const unsigned tid = threadIdx.x;
+    const unsigned gid = blockIdx.x * blockDim.x + threadIdx.x;
 
-    sdata[2 * tid]     = g_idata[2 * tid];
-    sdata[2 * tid + 1] = g_idata[2 * tid + 1];
-    __syncthreads();
+    if (gid < n) {
+        sdata[tid] = data[gid];
+        __syncthreads();
 
-    sdata[2 * tid] = sdata[2 * tid] + sdata[2 * tid + 1];
-    __syncthreads();
+        float local_sum     = 0.0f;
+        unsigned int offset = tid;
 
-    g_odata[tid] = sdata[tid];
+        for (unsigned i = 0; i < step; ++i) {
+            local_sum += sdata[tid];
+        }
+
+        // what's worse, an n-thread bank conflict, or all threads atomically adding to the same bank?
+        // Actually, nevermind, it HAS to be atomic because otherwise it may be dangerous?
+
+
+        if (tid == 0) {
+            // atomically add our block results to the output float
+            // shared -> register -> global surely won't be faster than shared->global
+            atomicAdd(result, shared_data[0]);
+        }
+    }
 }
+*/
+
+#ifndef LOAD_LEVEL
+#error "LOAD_LEVEL not defined, something probably went terribly wrong during compilation"
+#endif
+
+#define DATA_LOAD_OFFSET (32 >> (LOAD_LEVEL - 1))
+#if DATA_LOAD_OFFSET == 0
+#error "Load level too high!"
+#endif
+
+#define COMPUTATION_LOAD_COUNT ((1 << LOAD_LEVEL) - 1)
 
 __global__ void sum_kernel(float *global_out, float *global_in) {
     // finally get to use the reduction code form HPC
@@ -71,20 +103,37 @@ __global__ void sum_kernel(float *global_out, float *global_in) {
     // And the extra is set to zero, so we can just do it and not have any issues
     // So ALL threads are working in valid memory
 
-    shared_data[tid] = global_in[gid];
+    global_in += gid;
+
+    // Offsets can be calculated of the blockdim, since the blockdim has been set by the load level
+    // 32 / blockDim.x is effectively LOAD_LEVEL
+
+    for (int i = 0; i < LOAD_LEVEL; ++i, global_in += DATA_LOAD_OFFSET) {
+        shared_data[tid] = *global_in;
+    }
     __syncthreads();
+
+    shared_data = shared_data + tid;
 
     for (unsigned int cutoff = blockDim.x >> 1; cutoff > 0; cutoff >>= 1) {
         if (tid < cutoff) {
-            shared_data[tid] += shared_data[tid + cutoff];
+            // shared_data[tid] += shared_data[tid + cutoff];
+            float p_sum          = 0.0f;
+            float *shared_offset = shared_data + cutoff;
+            for (int i = 0; i < COMPUTATION_LOAD_COUNT; ++i, shared_offset += cutoff) {
+                p_sum += *shared_offset;
+            }
+            *shared_data += p_sum;
         }
+        __syncthreads()
     }
 
     if (tid == 0) {
         // atomically add our block results to the output float
         // shared -> register -> global surely won't be faster than shared->global
-        atomicAdd(global_out, shared_data[0]);
+        atomicAdd(global_out, *shared_data);
     }
 }
+
 
 #endif  // #ifndef _SCAN_WORKEFFICIENT_KERNEL_H_

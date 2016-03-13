@@ -27,6 +27,10 @@
  * source code with only those rights set forth herein.
  */
 
+#ifndef LOAD_LEVEL
+#define LOAD_LEVEL 1
+#endif
+
 #ifdef _WIN32
 #define NOMINMAX
 #endif
@@ -34,11 +38,11 @@
 #define NUM_BANKS 16
 
 // includes, system
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include <float.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // includes, project
 #include <cutil.h>
@@ -75,7 +79,13 @@ void runTest(int argc, char **argv) {
     CUT_SAFE_CALL(cutCreateTimer(&timer));
 
     // Nope, 32. Always and forever.
-    // const unsigned int num_threads = 2;
+    // Well, not always, but it's determined by the load level
+    const unsigned int num_threads = 32 >> (LOAD_LEVEL - 1);
+    if (num_threads == 0) {
+        // num_threads is not a power of two, which is going to cause... issues. Die.
+        printf("Load level too high (%d)! Exiting.",LOAD_LEVEL);
+        exit(1);
+    }
 
     // lazy re-adjust because we need it to be a multiple of 32 or we'll explode
     int correct_size = num_elements;
@@ -95,7 +105,7 @@ void runTest(int argc, char **argv) {
     }
     // blank out extras
     for (unsigned int i = num_elements; i < correct_size; ++i) {
-        h_data[i] = 0.0;
+        h_data[i] = 0.0f;
     }
     // printf("\n");
 
@@ -112,7 +122,7 @@ void runTest(int argc, char **argv) {
     // AND I can't just have global id 0 blank it because it might get scheduled weird
     // It's dumb but deal with it.
     const float literal_zero = 0.0f;
-    CUDA_SAFE_CALL(cudaMemcpy(d_odata, &literal_zero, sizeof(float), cudaMemcpyHostToDevice));
+    // CUDA_SAFE_CALL(cudaMemcpy(d_odata, &literal_zero, sizeof(float), cudaMemcpyHostToDevice));
 
     CUDA_SAFE_CALL(cudaMemcpy(d_idata, h_data, mem_size, cudaMemcpyHostToDevice));
 
@@ -124,7 +134,8 @@ void runTest(int argc, char **argv) {
 
     cutStartTimer(timer);
     for (int i = 0; i < numIterations; ++i) {
-        sum_kernel<<<block_count, 32, sizeof(float) * 32>>>(d_odata, d_idata);
+        CUDA_SAFE_CALL(cudaMemcpy(d_odata, &literal_zero, sizeof(float), cudaMemcpyHostToDevice));
+        sum_kernel<<<block_count, num_threads, sizeof(float) * 32>>>(d_odata, d_idata);
     }
     cudaThreadSynchronize();
     cutStopTimer(timer);
