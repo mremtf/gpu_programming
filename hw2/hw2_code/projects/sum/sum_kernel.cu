@@ -113,7 +113,7 @@ __global__ void sum_kernel(float *global_out, float *global_in) {
     for (int i = 0; i < LOAD_LEVEL; ++i, global_in += DATA_LOAD_OFFSET) {
         shared_data[tid] = *global_in;
     }
-    __syncthreads();
+    //__syncthreads();
 
     shared_data = shared_data + tid;
 
@@ -127,7 +127,7 @@ __global__ void sum_kernel(float *global_out, float *global_in) {
             }
             *shared_data += p_sum;
         }
-        __syncthreads();
+        //__syncthreads();
     }
 
     if (tid == 0) {
