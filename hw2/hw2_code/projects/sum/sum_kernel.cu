@@ -94,7 +94,9 @@ __global__ void sum_kernel(float *result, float *data, const unsigned n, const u
 
 __global__ void sum_kernel(float *global_out, float *global_in) {
     // finally get to use the reduction code form HPC
-    extern __shared__ float shared_data[];
+    extern __shared__ float sdata[];
+
+    float *shared_data = sdata;
 
     const unsigned int tid = threadIdx.x;
     const unsigned int gid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -125,7 +127,7 @@ __global__ void sum_kernel(float *global_out, float *global_in) {
             }
             *shared_data += p_sum;
         }
-        __syncthreads()
+        __syncthreads();
     }
 
     if (tid == 0) {
