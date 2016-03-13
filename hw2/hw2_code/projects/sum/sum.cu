@@ -30,6 +30,9 @@
 #ifndef LOAD_LEVEL
 #define LOAD_LEVEL 1
 #endif
+#define XSTR(x) STR(x)
+#define STR(x) #x
+#pragma message "LOAD LEVEL = " XSTR(LOAD_LEVEL)
 
 #ifdef _WIN32
 #define NOMINMAX
