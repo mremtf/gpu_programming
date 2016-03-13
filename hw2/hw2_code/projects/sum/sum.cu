@@ -100,7 +100,7 @@ void runTest(int argc, char **argv) {
 
     // printf("INPUT: ");
     for (unsigned int i = 0; i < num_elements; ++i) {
-        h_data[i] = floorf(1000 * (rand() / (float) RAND_MAX));
+        h_data[i] = floorf(10 * (rand() / (float) RAND_MAX));
         // printf(" %f ", h_data[i]);
     }
     // blank out extras
