@@ -909,7 +909,7 @@ main( int argc, char** argv)
 {
     runTest( argc, argv);
 
-    CUT_EXIT(argc, argv);
+    //CUT_EXIT(argc, argv);
 		return 0;
 }
 
@@ -919,12 +919,15 @@ main( int argc, char** argv)
 void
 runTest( int argc, char** argv) 
 {
+		if (argc != 2) {
+			printf("%s num_branches [ 1 2 4 8 16 32 64]\n", argv[0]);
+			return;
+		}
 
     CUT_DEVICE_INIT();
 
 		int num_branches = atoi(argv[1]);
-		unsigned int num_threads = atoi(argv[2]);
-
+		unsigned int num_threads = 64; 
     unsigned int timer = 0;
     CUT_SAFE_CALL( cutCreateTimer( &timer));
     CUT_SAFE_CALL( cutStartTimer( timer));
