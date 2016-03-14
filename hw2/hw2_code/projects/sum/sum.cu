@@ -57,7 +57,7 @@ void runTest(int argc, char **argv) {
     const unsigned int num_threads = 32 >> (LOAD_LEVEL - 1);
     if (num_threads == 0) {
         // num_threads is not a power of two, which is going to cause... issues. Die.
-        printf("Load level too high (%d)! Exiting.",LOAD_LEVEL);
+        printf("Load level too high (%d)! Exiting.", LOAD_LEVEL);
         exit(1);
     }
 
@@ -72,16 +72,16 @@ void runTest(int argc, char **argv) {
 
     float *h_data = (float *) malloc(mem_size);
 
-    //printf("INPUT: ");
+    // printf("INPUT: ");
     for (unsigned int i = 0; i < num_elements; ++i) {
         h_data[i] = floorf(10 * (rand() / (float) RAND_MAX));
-        //printf(" %f ", h_data[i]);
+        // printf(" %f ", h_data[i]);
     }
     // blank out extras
     for (unsigned int i = num_elements; i < correct_size; ++i) {
         h_data[i] = 0.0f;
     }
-    //printf("\n");
+    // printf("\n");
 
     float *reference = (float *) malloc(mem_size);
     computeGold(reference, h_data, num_elements);
