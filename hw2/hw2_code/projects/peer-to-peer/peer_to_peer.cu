@@ -15,7 +15,9 @@ __global__ void
 simple_copy_kernel( float* g_idata, float* g_odata) 
 {
 		// thread copy	
-		g_odata[threadIdx.x] = g_idata[threadIdx.x];
+		size_t gtid = blockDim.x * blockIdx.x + threadIdx.x;
+		printf("%lu ", gtid);
+		g_odata[gtid] = g_idata[gtid];
 }
 
 
@@ -42,8 +44,20 @@ void run_device_mem_local_to_gpu(float* h_idata, size_t h_size) {
 		
 		// setup execution parameters
     // adjust thread block sizes here
-    dim3  grid( 1, 1, 1);
-    dim3  threads( 32, 1, 1);
+		int grid_size = 0;
+		int thread_count = 32;
+		if ((h_size % thread_count) != 0) {
+			grid_size = (h_size / thread_count + 1) * thread_count;
+		}
+		else {
+			grid_size = h_size / thread_count;
+		}
+
+		printf ("blocks = %d\n", grid_size);
+		
+    dim3  grid( grid_size, 1, 1);
+		
+    dim3  threads( thread_count, 1, 1);
 
     // execute the selected kernel
     simple_copy_kernel<<< grid, threads, mem_size >>>( d_idata, d_odata);
@@ -94,8 +108,20 @@ void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
 
 		// setup execution parameters
     // adjust thread block sizes here
-    dim3  grid( 1, 1, 1);
-    dim3  threads( 32, 1, 1);
+		int grid_size = 0;
+		int thread_count = 32;
+		if ((h_size % thread_count) != 0) {
+			grid_size = (h_size / thread_count + 1) * thread_count;
+		}
+		else {
+			grid_size = h_size / thread_count;
+		}
+
+		printf ("blocks = %d\n", grid_size);
+		
+    dim3  grid( grid_size, 1, 1);
+		
+    dim3  threads( thread_count, 1, 1);
 
     // execute the selected kernel
     simple_copy_kernel<<< grid, threads, mem_size >>>( d_idata, d_odata);
