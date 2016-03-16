@@ -3,7 +3,7 @@
 #endif
 
 #ifndef BLOCK_LOAD_LEVEL
-#define BLOCK_LOAD_LEVEL 1
+#define BLOCK_LOAD_LEVEL 2
 #endif
 
 #define XSTR(x) STR(x)
@@ -75,6 +75,11 @@ void runTest(int argc, char **argv) {
     }
     unsigned int block_count = (correct_size / 32) >> (BLOCK_LOAD_LEVEL - 1);
 
+if (block_count == 0) {
+puts("Block count 0! Correcting to 1\n");
+block_count = 1;
+}
+
     const unsigned int mem_size = sizeof(float) * correct_size;
 
     float *h_data = (float *) malloc(mem_size);
@@ -111,14 +116,14 @@ void runTest(int argc, char **argv) {
 
     printf("Running sum of %d elements\n", num_elements);
 
-    unsigned int numIterations = 10;
+    unsigned int numIterations = 1;
 
-printf("%d %d\n",block_count,num_threads);
+printf("%d %d\n",block_count,num_threads,correct_size);
 
     cutStartTimer(timer);
     for (int i = 0; i < numIterations; ++i) {
         CUDA_SAFE_CALL(cudaMemcpy(d_odata, &literal_zero, sizeof(float), cudaMemcpyHostToDevice));
-        sum_kernel<<<block_count, num_threads, sizeof(float) * 32>>>(d_odata, d_idata,num_elements);
+        sum_kernel<<<block_count, num_threads, sizeof(float) * 32>>>(d_odata, d_idata,correct_size);
     }
     cudaThreadSynchronize();
     cutStopTimer(timer);
