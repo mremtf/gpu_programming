@@ -73,7 +73,7 @@ void runTest(int argc, char **argv) {
     if (correct_size % 32) {
         correct_size = (correct_size / 32 + 1) * 32;
     }
-    unsigned int block_count = (correct_size / 32) >> BLOCK_LOAD_LEVEL;
+    unsigned int block_count = (correct_size / 32) >> (BLOCK_LOAD_LEVEL - 1);
 
     const unsigned int mem_size = sizeof(float) * correct_size;
 
@@ -111,12 +111,14 @@ void runTest(int argc, char **argv) {
 
     printf("Running sum of %d elements\n", num_elements);
 
-    unsigned int numIterations = 100;
+    unsigned int numIterations = 10;
+
+printf("%d %d\n",block_count,num_threads);
 
     cutStartTimer(timer);
     for (int i = 0; i < numIterations; ++i) {
         CUDA_SAFE_CALL(cudaMemcpy(d_odata, &literal_zero, sizeof(float), cudaMemcpyHostToDevice));
-        sum_kernel<<<block_count, num_threads, sizeof(float) * 32>>>(d_odata, d_idata);
+        sum_kernel<<<block_count, num_threads, sizeof(float) * 32>>>(d_odata, d_idata,num_elements);
     }
     cudaThreadSynchronize();
     cutStopTimer(timer);
