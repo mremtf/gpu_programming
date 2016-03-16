@@ -28,41 +28,58 @@ void run_device_mem_local_to_gpu(float* h_idata, size_t h_size, size_t d1, size_
 		// setup execution parameters
     // adjust thread block sizes here
 		cudaDeviceReset();
+
+		// find the required number of blocks on the grid
 		int grid_size = 0;
 		int thread_count = 32;
 		if ((h_size % thread_count) != 0) {
-			grid_size = (h_size / thread_count + 1) * thread_count;
+			grid_size = (h_size / thread_count + 1);
+			printf("GRID SIZE %d\n", grid_size);
 		}
 		else {
 			grid_size = h_size / thread_count;
+			printf("GRID SIZE %d\n", grid_size);
 		}
-
+		/*
+		* SWITCH TO DEVICE 1
+		*/
 		cudaSetDevice(d1);
     unsigned int mem_size = sizeof( float) * h_size;
 		//printf("MEMORY SIZE = %lu", mem_size);
-
+		
 		printf("TOTAL MEM PER MALLOC %lu\n\n", mem_size);
 		printf("threads %d block_count %d\n\n", thread_count, grid_size);
 
     // allocate device memory
     float* d_idata;
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_idata, mem_size));
+		cudaError_t cuerr = cudaGetLastError();
+		if( cuerr != cudaSuccess) {
+			printf("CUDA ERROR %d\n\n", cuerr);
+		}
 
 
     // copy host memory to device
-    CUDA_SAFE_CALL( cudaMemcpy( d_idata, h_idata, mem_size,
-                                cudaMemcpyHostToDevice) );
+    CUDA_SAFE_CALL( cudaMemcpy( d_idata, h_idata, mem_size, cudaMemcpyHostToDevice) );
+		cuerr = cudaGetLastError();
+		if( cuerr != cudaSuccess) {
+			printf("CUDA ERROR %d\n\n", cuerr);
+		}
     // allocate device memory for result
     float* d_odata;
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_odata, mem_size));
-		
+		cuerr = cudaGetLastError();
+		if( cuerr != cudaSuccess) {
+			printf("CUDA ERROR %d\n\n", cuerr);
+		}
 		
     dim3  grid( grid_size, 1, 1);	
     dim3  threads( thread_count, 1, 1);
 
     // execute the selected kernel
-    simple_copy_kernel<<< grid, threads,0>>>( d_idata, d_odata,h_size);
-		cudaError_t cuerr = cudaGetLastError() ;
+		printf("threads %d block_count %d\n\n", thread_count, grid_size);
+    simple_copy_kernel<<< grid, threads>>>( d_idata, d_odata,h_size);
+		cuerr = cudaGetLastError();
 		if( cuerr != cudaSuccess) {
 			printf("CUDA ERROR %d\n\n", cuerr);
 		}
@@ -75,6 +92,10 @@ void run_device_mem_local_to_gpu(float* h_idata, size_t h_size, size_t d1, size_
     // copy result from device to host
     CUDA_SAFE_CALL( cudaMemcpy( h_odata, d_odata, mem_size,
                                 cudaMemcpyDeviceToHost) );
+		cuerr = cudaGetLastError();
+		if( cuerr != cudaSuccess) {
+			printf("CUDA ERROR %d\n\n", cuerr);
+		}
 
 
     // cleanup memory
