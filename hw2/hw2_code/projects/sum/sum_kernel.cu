@@ -23,17 +23,22 @@ __global__ void sum_kernel(float *global_out, float *global_in, const unsigned i
     const unsigned int tid = threadIdx.x;
     const unsigned int gid = blockIdx.x * 32 /*blockDim.x*/ + threadIdx.x;
 
+
     // Writing it such that we always round up to the nearest multiple of the warp size (32)
     // And the extra is set to zero, so we can just do it and not have any issues
     // So ALL threads are working in valid memory
     global_in += gid;
 
+    for (unsigned int g_block = blockIdx.x; g_block < (n_elem / 32); g_block += gridDim.x, global_in += gridDim.x * 32) {
+if (threadIdx.x == 0) printf("%d DO BLOCK %d OF %d\n",blockIdx.x,g_block,n_elem / 32);
+
     // Offsets can be calculated of the blockdim, since the blockdim has been set by the load level
     // 32 / blockDim.x is effectively LOAD_LEVEL
 
     shared_data = sdata + tid;
+
     for (int i = 0; i < DATA_READ_LOAD; ++i, global_in += DATA_READ_OFFSET, shared_data += DATA_READ_OFFSET) {
-        // printf("%d_%d_%d LOAD %f TO %d\n",tid,blockIdx.x,gid,*global_in,shared_data - sdata);
+        printf("%d_%d_%d LOAD %f TO %d\n",tid,blockIdx.x,gid,*global_in,shared_data - sdata);
         *shared_data = *global_in;
     }
     // There are no other warps, so no need to sync
@@ -41,16 +46,13 @@ __global__ void sum_kernel(float *global_out, float *global_in, const unsigned i
 
     shared_data = sdata + tid;
 
-    for (unsigned int g_block = blockIdx.x; g_block < (n_elem / 32); g_block += gridDim.x, global_in += gridDim.x * 32) {
-if (threadIdx.x == 0) printf("%d DO BLOCK %d OF %d\n",blockIdx.x,g_block,n_elem / 32);
         for (unsigned int i = 0; i < DATA_READ_LOAD; ++i, shared_data += DATA_READ_OFFSET) {
             for (unsigned int cutoff = blockDim.x >> 1; cutoff > 0; cutoff >>= 1) {
                 if (tid < cutoff) {
                     // float dbg = *shared_data;
                     // float dbg_2 = shared_data[cutoff];
                     // printf("%d_%d_%d PASS CUTOFF %d\n",tid,blockIdx.x,gid,cutoff);
-                    // printf("%d_%d_%d ADDED %d (%f) AND %d
-                    // (%f)\n",tid,blockIdx.x,gid,tid+i*DATA_READ_OFFSET,dbg,tid+(i*DATA_READ_OFFSET) + cutoff,dbg_2);
+                    // printf("%d_%d_%d ADDED %d (%f) AND %d (%f)\n",tid,blockIdx.x,gid,tid+i*DATA_READ_OFFSET,dbg,tid+(i*DATA_READ_OFFSET) + cutoff,dbg_2);
                     *shared_data += shared_data[cutoff];
                 }
                 //__syncthreads();
