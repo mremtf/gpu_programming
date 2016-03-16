@@ -3,7 +3,7 @@
 #endif
 
 #ifndef BLOCK_LOAD_LEVEL
-#define BLOCK_LOAD_LEVEL 2
+#define BLOCK_LOAD_LEVEL 8
 #endif
 
 #define XSTR(x) STR(x)
@@ -116,7 +116,7 @@ void runTest(int argc, char **argv) {
 
     printf("Running sum of %d elements\n", num_elements);
 
-    unsigned int numIterations = 1;
+    unsigned int numIterations = 100;
 
     printf("%d %d\n", block_count, num_threads, correct_size);
 

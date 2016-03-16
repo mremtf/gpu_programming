@@ -29,7 +29,7 @@ __global__ void sum_kernel(float *global_out, float *global_in, const unsigned i
 
     for (unsigned int g_block = blockIdx.x; g_block < (n_elem / 32);
          g_block += gridDim.x, global_root += gridDim.x * 32) {
-        if (threadIdx.x == 0) printf("%d DO BLOCK %d OF %d\n", blockIdx.x, g_block, n_elem / 32);
+        // if (threadIdx.x == 0) printf("%d DO BLOCK %d OF %d\n", blockIdx.x, g_block, n_elem / 32);
 
         // Offsets can be calculated of the blockdim, since the blockdim has been set by the load level
         // 32 / blockDim.x is effectively LOAD_LEVEL
@@ -38,7 +38,7 @@ __global__ void sum_kernel(float *global_out, float *global_in, const unsigned i
         float *shared_data = shared_root;
 
         for (int i = 0; i < DATA_READ_LOAD; ++i, global_data += DATA_READ_OFFSET, shared_data += DATA_READ_OFFSET) {
-            printf("%d_%d_%d LOAD %f TO %d\n", tid, blockIdx.x, gid, *global_data, shared_data - sdata);
+            // printf("%d_%d_%d LOAD %f TO %d\n", tid, blockIdx.x, gid, *global_data, shared_data - sdata);
             *shared_data = *global_data;
         }
         // There are no other warps, so no need to sync
