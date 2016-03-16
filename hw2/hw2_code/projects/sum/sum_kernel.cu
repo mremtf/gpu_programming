@@ -14,7 +14,7 @@
 
 #define COMPUTATION_LOAD_COUNT ((1 << LOAD_LEVEL) - 1)
 
-__global__ void sum_kernel(float *global_out, float *global_in) {
+__global__ void sum_kernel(float *global_out, float *global_in, const unsigned int n_elem) {
     // finally get to use the reduction code form HPC
     extern __shared__ float sdata[];
 
@@ -41,28 +41,31 @@ __global__ void sum_kernel(float *global_out, float *global_in) {
 
     shared_data = sdata + tid;
 
-    for (unsigned int i = 0; i < DATA_READ_LOAD; ++i, shared_data += DATA_READ_OFFSET) {
-        for (unsigned int cutoff = blockDim.x >> 1; cutoff > 0; cutoff >>= 1) {
-            if (tid < cutoff) {
-                // float dbg = *shared_data;
-                // float dbg_2 = shared_data[cutoff];
-                // printf("%d_%d_%d PASS CUTOFF %d\n",tid,blockIdx.x,gid,cutoff);
-                // printf("%d_%d_%d ADDED %d (%f) AND %d
-                // (%f)\n",tid,blockIdx.x,gid,tid+i*DATA_READ_OFFSET,dbg,tid+(i*DATA_READ_OFFSET) + cutoff,dbg_2);
-                *shared_data += shared_data[cutoff];
+    for (unsigned int g_block = blockIdx.x; g_block < (n_elem / 32); g_block += gridDim.x;
+         global_in += gridDim.x * 32) {
+        for (unsigned int i = 0; i < DATA_READ_LOAD; ++i, shared_data += DATA_READ_OFFSET) {
+            for (unsigned int cutoff = blockDim.x >> 1; cutoff > 0; cutoff >>= 1) {
+                if (tid < cutoff) {
+                    // float dbg = *shared_data;
+                    // float dbg_2 = shared_data[cutoff];
+                    // printf("%d_%d_%d PASS CUTOFF %d\n",tid,blockIdx.x,gid,cutoff);
+                    // printf("%d_%d_%d ADDED %d (%f) AND %d
+                    // (%f)\n",tid,blockIdx.x,gid,tid+i*DATA_READ_OFFSET,dbg,tid+(i*DATA_READ_OFFSET) + cutoff,dbg_2);
+                    *shared_data += shared_data[cutoff];
+                }
+                //__syncthreads();
             }
-            //__syncthreads();
+            if (i != 0 && tid == 0) {
+                // printf("%d_%d_%d SAVE PARTIAL RESULT %f\n",tid,blockIdx.x,gid,*shared_data);
+                sdata[0] += *shared_data;
+            }
         }
-        if (i != 0 && tid == 0) {
-            // printf("%d_%d_%d SAVE PARTIAL RESULT %f\n",tid,blockIdx.x,gid,*shared_data);
-            sdata[0] += *shared_data;
-        }
-    }
 
-    if (tid == 0) {
-        // atomically add our block results to the output float
-        // shared -> register -> global surely won't be faster than shared->global
-        atomicAdd(global_out, sdata[0]);
+        if (tid == 0) {
+            // atomically add our block results to the output float
+            // shared -> register -> global surely won't be faster than shared->global
+            atomicAdd(global_out, sdata[0]);
+        }
     }
 }
 
