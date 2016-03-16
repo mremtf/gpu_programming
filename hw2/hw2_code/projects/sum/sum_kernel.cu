@@ -18,14 +18,13 @@ __global__ void sum_kernel(float *global_out, float *global_in, const unsigned i
     // finally get to use the reduction code form HPC
     extern __shared__ float sdata[];
 
-    float *shared_root = sdata + tid;
-
     const unsigned int tid = threadIdx.x;
     const unsigned int gid = blockIdx.x * 32 /*blockDim.x*/ + threadIdx.x;
 
     // Writing it such that we always round up to the nearest multiple of the warp size (32)
     // And the extra is set to zero, so we can just do it and not have any issues
     // So ALL threads are working in valid memory
+    float *shared_root = sdata + tid;
     float *global_root = global_in + gid;
 
     for (unsigned int g_block = blockIdx.x; g_block < (n_elem / 32);
