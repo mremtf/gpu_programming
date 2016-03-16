@@ -12,21 +12,22 @@
 
 
 __global__ void
-simple_copy_kernel( float* g_idata, float* g_odata) 
+simple_copy_kernel( float* g_idata, float* g_odata, size_t N) 
 {
 		// thread copy	
 		size_t gtid = blockDim.x * blockIdx.x + threadIdx.x;
-		//printf("%lu ", gtid);
-		g_odata[gtid] = g_idata[gtid] + 1;
+		if (gtid < N) 
+			g_odata[gtid] = g_idata[gtid];
 }
 
 
 
-void run_device_mem_local_to_gpu(float* h_idata, size_t h_size) {
+void run_device_mem_local_to_gpu(float* h_idata, size_t h_size, size_t d1, size_t d2) {
     // adjust number of threads here
  		//unsigned int num_threads = h_size;
 		// setup execution parameters
     // adjust thread block sizes here
+		cudaDeviceReset();
 		int grid_size = 0;
 		int thread_count = 32;
 		if ((h_size % thread_count) != 0) {
@@ -36,38 +37,31 @@ void run_device_mem_local_to_gpu(float* h_idata, size_t h_size) {
 			grid_size = h_size / thread_count;
 		}
 
-
+		cudaSetDevice(d1);
     unsigned int mem_size = sizeof( float) * h_size;
+		//printf("MEMORY SIZE = %lu", mem_size);
 
-		unsigned int timer = 0;
-    CUT_SAFE_CALL( cutCreateTimer( &timer));
+		printf("TOTAL MEM PER MALLOC %lu\n\n", mem_size);
+		printf("threads %d block_count %d\n\n", thread_count, grid_size);
 
     // allocate device memory
     float* d_idata;
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_idata, mem_size));
 
 
-    CUT_SAFE_CALL( cutStartTimer( timer));
     // copy host memory to device
     CUDA_SAFE_CALL( cudaMemcpy( d_idata, h_idata, mem_size,
                                 cudaMemcpyHostToDevice) );
-    CUT_SAFE_CALL( cutStopTimer( timer));
-    printf( "Processing time: %f (ms)\n", cutGetTimerValue( timer));
-    CUT_SAFE_CALL( cutDeleteTimer( timer));
-
     // allocate device memory for result
     float* d_odata;
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_odata, mem_size));
 		
 		
-		printf ("blocks = %d\n", grid_size);
-		
-    dim3  grid( grid_size, 1, 1);
-		
+    dim3  grid( grid_size, 1, 1);	
     dim3  threads( thread_count, 1, 1);
 
     // execute the selected kernel
-    simple_copy_kernel<<< grid, threads, mem_size >>>( d_idata, d_odata);
+    simple_copy_kernel<<< grid, threads,0>>>( d_idata, d_odata,h_size);
 		cudaError_t cuerr = cudaGetLastError() ;
 		if( cuerr != cudaSuccess) {
 			printf("CUDA ERROR %d\n\n", cuerr);
@@ -90,7 +84,7 @@ void run_device_mem_local_to_gpu(float* h_idata, size_t h_size) {
 
 }
 
-void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
+void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size,size_t d1, size_t d2) {
     // adjust number of threads here
  		//unsigned int num_threads = h_size;
 		int grid_size = 0;
@@ -103,7 +97,8 @@ void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
 		}
     unsigned int mem_size = sizeof( float) * h_size;
 
-		cudaSetDevice(0);
+		printf("TOTAL MEM PER MALLOC %lu\n\n", mem_size);
+		cudaSetDevice(d1);
 		// allocate device memory
 		/*
 		* DEVICE MEMORY ALLOCATIONS FOR DEVICE ONE
@@ -118,23 +113,17 @@ void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
 		/*
 		* MEMORY COPIES FOR DEVICE ONE
 		**/
-		unsigned int timer = 0;
-    CUT_SAFE_CALL( cutCreateTimer( &timer));
-    CUT_SAFE_CALL( cutStartTimer( timer));
 
 		// copy host memory to device
     CUDA_SAFE_CALL( cudaMemcpy( d_idata, h_idata, mem_size,
                                 cudaMemcpyHostToDevice) );
 
-		CUT_SAFE_CALL( cutStopTimer( timer));
-    printf( "Memcpy to card time: %f (ms)\n", cutGetTimerValue( timer));
-		
     dim3  grid( grid_size, 1, 1);
 		
     dim3  threads( thread_count, 1, 1);
 
     // execute the selected kernel
-    simple_copy_kernel<<< grid, threads, mem_size >>>( d_idata, d_odata);
+    simple_copy_kernel<<< grid, threads,0>>>( d_idata, d_odata,h_size);
 
 		// check if kernel execution generated and error
  		cudaError_t cuerr = cudaGetLastError(); 
@@ -144,7 +133,7 @@ void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
     CUT_CHECK_ERROR("Kernel execution failed");
 
 		// change GPU device
-		cudaSetDevice(1);
+		cudaSetDevice(d2);
 
 		/*
 		* DEVICE MEMORY ALLOCATIONS FOR DEVICE TWO
@@ -159,10 +148,7 @@ void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
 		// execute the selected kernel
 		//CUDA_SAFE_CALL(cudaMemcpyPeer(d_idata_two,1,d_idata,0,mem_size));
 
-    // execute the selected kernel
-    CUT_SAFE_CALL( cutStartTimer( timer));
-    
-		simple_copy_kernel<<< grid, threads, mem_size >>>( d_idata, d_odata_two);
+		simple_copy_kernel<<< grid, threads,0>>>( d_idata, d_odata_two,h_size);
 		cuerr = cudaGetLastError();
 		if(  cuerr != cudaSuccess) {
 			printf("CUDA ERROR %d\n\n", cuerr);
@@ -171,13 +157,11 @@ void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
 		// check if kernel execution generated and error
     CUT_CHECK_ERROR("Kernel execution failed");
 
-		CUT_SAFE_CALL( cutStopTimer( timer));
-    printf( "Memcpy to card time: %f (ms)\n", cutGetTimerValue( timer));
 		/*
 		* HOST MEMORY COPIES FROM DEVICE ONE
 		**/
 
-		cudaSetDevice(0);
+		cudaSetDevice(d1);
 		// allocate mem for the result on host side
     float* h_odata = (float*) malloc( mem_size);
     // copy result from device to host
@@ -187,7 +171,7 @@ void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
 		/*
 		* HOST MEMORY COPIES FROM DEVICE TWO
 		**/
-		cudaSetDevice(1);
+		cudaSetDevice(d2);
 		// allocate mem for the result on host side
     float* h_odata_two = (float*) malloc( mem_size);
     // copy result from device to host
@@ -208,11 +192,9 @@ void run_remote_peer_to_peer_memory_access(float* h_idata, size_t h_size) {
     CUDA_SAFE_CALL(cudaFree(d_odata));
     CUDA_SAFE_CALL(cudaFree(d_odata_two));
 
-    CUT_SAFE_CALL( cutDeleteTimer( timer));
-
 }
 
-void run_remote_memory_access_using_data_copy(float* h_idata, size_t h_size) {
+void run_remote_memory_access_using_data_copy(float* h_idata, size_t h_size, size_t d1, size_t d2) {
     // adjust number of threads here
  		//unsigned int num_threads = h_size;
 		int grid_size = 0;
@@ -225,47 +207,30 @@ void run_remote_memory_access_using_data_copy(float* h_idata, size_t h_size) {
 		}
     
 		unsigned int mem_size = sizeof( float) * h_size;
-//printf("%d!!!!!!!!\n",mem_size);
-		// copy to GPU 
-		
-		// copy back from GPU
-		// copy to another GPU
-
-
-
-		cudaSetDevice(0);
+		printf("TOTAL MEM PER MALLOC %lu\n\n", mem_size);
+		cudaSetDevice(d1);
 		// allocate device memory
     float* d_idata, *d_odata;
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_idata, mem_size));
-	puts("FIRST ALLOCATION");
 
-		unsigned int timer = 0;
-    CUT_SAFE_CALL( cutCreateTimer( &timer));
-		CUT_SAFE_CALL( cutStartTimer( timer));
 
     // copy host memory to device
     CUDA_SAFE_CALL( cudaMemcpy( d_idata, h_idata, mem_size,
                                 cudaMemcpyHostToDevice) );
-puts("MEMCPY");
-		CUT_SAFE_CALL( cutStopTimer( timer));
-    printf( "Memcpy to card time: %f (ms)\n", cutGetTimerValue( timer));
 
 		 // allocate device memory for result
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_odata, mem_size));
 		//printf ("blocks = %d\n", grid_size);
-puts("SECOND ALLOCATION");		
-    dim3  grid( grid_size, 1, 1);
-		
+    dim3  grid( grid_size, 1, 1);	
     dim3  threads( thread_count, 1, 1);
 
     // execute the selected kernel
-    simple_copy_kernel<<< grid, threads, mem_size >>>( d_idata, d_odata);
+    simple_copy_kernel<<< grid, threads,0>>>( d_idata, d_odata, h_size);
 		cudaError_t cuerr = cudaGetLastError();
 		if(  cuerr != cudaSuccess) {
 			printf("CUDA ERROR %d\n\n", cuerr);
 			printf("ERROR: %s\n\n",cudaGetErrorString(cuerr));
 		}
-		puts("FIRST RUN DONE");
 		// check if kernel execution generated and error
     CUT_CHECK_ERROR("Kernel execution failed");
 		// allocate mem for the result on host side
@@ -276,7 +241,7 @@ puts("SECOND ALLOCATION");
                                 cudaMemcpyDeviceToHost) );
 
 		// change GPU device
-		cudaSetDevice(1);
+		cudaSetDevice(d2);
 				// allocate mem for the result on host side
     float* h_odata_two = (float*) malloc( mem_size);
 		// allocate device memory
@@ -284,15 +249,12 @@ puts("SECOND ALLOCATION");
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_idata_two, mem_size));
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_odata_two, mem_size));
 
-    CUT_SAFE_CALL( cutStartTimer( timer));
 
-		CUDA_SAFE_CALL( cudaMemcpy( d_idata_two, h_idata, mem_size,
+		CUDA_SAFE_CALL( cudaMemcpy( d_idata_two, h_odata, mem_size,
                                 cudaMemcpyHostToDevice) );
 
-		CUT_SAFE_CALL( cutStopTimer( timer));
-    printf( "Memcpy to card time: %f (ms)\n", cutGetTimerValue( timer));
 
-    simple_copy_kernel<<< grid, threads, mem_size >>>( d_idata_two, d_odata_two);
+    simple_copy_kernel<<< grid, threads,0>>>( d_idata_two, d_odata_two, h_size);
 		cuerr = cudaGetLastError();
 		if( cuerr != cudaSuccess) {
 			printf("CUDA ERROR %d\n\n", cuerr);
@@ -316,7 +278,6 @@ puts("SECOND ALLOCATION");
     CUDA_SAFE_CALL(cudaFree(d_idata_two));
     CUDA_SAFE_CALL(cudaFree(d_odata));
     CUDA_SAFE_CALL(cudaFree(d_odata_two));
-    CUT_SAFE_CALL( cutDeleteTimer( timer));
 
 }
 
@@ -325,8 +286,8 @@ puts("SECOND ALLOCATION");
 int
 main( int argc, char** argv) 
 {
-		if (argc != 3) {
-			printf("%s <memory access 1 local 2 peer-to-peer 3 peer-to-peer-memcpy> <num elements\n", argv[0]);
+		if (argc != 5) {
+			printf("%s <memory access 1 local 2 peer-to-peer 3 peer-to-peer-memcpy> <num elements> <device 1 id> <device 2 id>\n", argv[0]);
 			return 0;
 		}
 
@@ -334,6 +295,8 @@ main( int argc, char** argv)
 		
 		int memory_access = atoi(argv[1]);
 		int num_elements = atoi(argv[2]);
+		int device_one_id = atoi(argv[3]);
+		int device_two_id = atoi(argv[4]);
 
     // allocate host memory
 		if ((num_elements % 32) != 0) {
@@ -345,19 +308,19 @@ main( int argc, char** argv)
     // initalize the memory
     for( unsigned int i = 0; i < num_elements; ++i) 
     {
-        h_idata[i] = (float) i;
+        h_idata[i] = 0;
     }
 
 		switch (memory_access) {
 			case 1:
-				run_device_mem_local_to_gpu(h_idata,num_elements);
+				run_device_mem_local_to_gpu(h_idata,num_elements, device_one_id,device_two_id);
 			break;
 			case 2:	
-				run_remote_peer_to_peer_memory_access(h_idata,num_elements);
+				run_remote_peer_to_peer_memory_access(h_idata,num_elements,device_one_id,device_two_id);
 			break;
 
 			case 3:	
-				run_remote_memory_access_using_data_copy(h_idata,num_elements);
+				run_remote_memory_access_using_data_copy(h_idata,num_elements,device_one_id,device_two_id);
 			break;
 			
 			default:
