@@ -3,7 +3,7 @@
 #endif
 
 #ifndef BLOCK_LOAD_LEVEL
-#define BLOCK_LOAD_LEVEL 8
+#define BLOCK_LOAD_LEVEL 1
 #endif
 
 #define XSTR(x) STR(x)
